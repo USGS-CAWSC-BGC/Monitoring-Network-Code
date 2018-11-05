@@ -1,0 +1,145 @@
+
+
+
+
+'CycleN2 add-in
+
+
+Public N2test,N2test1,N2test2,N2test3,N2test4
+
+Public N2InString(17)
+Public CycleN2InStringNH4 As String * 100
+Public CycleN2InString As String * 100
+Public CycleN2InString1 As String * 100
+Public CycleN2InString2 As String * 100
+Public CycleN2InString3 As String * 100
+Public CycleN2InString4 As String * 100
+Public CycleN2InString5 As String * 100
+Public CycleN2InString6 As String * 100
+Public N2BytesReturnedN2
+
+Public CycleN2Result,CycleN2Run,CAN2H4 ,VAN2H4,VASN2,N2Diag
+Public N2State,N2Flush1,N2AmbMin,N2CalMin,N2Flush2,N2Cal,N2Remaining
+Public N2month,N2day,N2year,N2hour,N2min
+
+'Define Data Tables
+
+DataTable (CycN2DataTableAll,1,200)
+	DataInterval (0,CycleInterval,Min,10)
+    Sample (1,N2hour,FP2)
+    Sample (1,N2min,FP2)
+    Sample (1,CycleN2Run,FP2)
+    Sample (1,CAN2H4,IEEE4)  
+    Sample (1,VAN2H4,IEEE4)
+    Sample (1,VASN2,FP2)
+    Sample (1,N2State,FP2)
+    Sample (1,N2Flush1,FP2)
+    Sample (1,N2AmbMin,FP2)
+    Sample (1,N2CalMin,FP2)
+    
+    Sample (1,N2Flush2,FP2)
+    Sample (1,N2Cal,FP2)
+    Sample (1,N2Remaining,FP2)
+    Sample (1,N2Diag,FP2)
+ ' Sample (1,N2BytesReturned,FP2) 
+'   Sample (1,test2,FP2) 
+EndTable
+DataTable (CycN2StringTable,1,200)
+	DataInterval (0,CycleInterval,Min,10)
+	Sample (1,CycleN2InStringNH4,String)'SAVE RAW DATA STRING FROM CYCLE NH4
+EndTable
+
+'Define Subroutines
+'Sub
+'EnterSub instructions here
+'EndSub
+	Sub GetLastDataN2H4
+	      N2test1=0
+				SerialOutBlock (com2,"$GLSO" + CHR(13),6)'Issu data return command	
+        N2test = SerialInChk(com2)
+        SerialIn (CycleN2InString1,com2,10,&H0D,100)'$GLSO command echo
+        N2test1 = SerialInChk(com2)
+        SerialIn (CycleN2InString2,com2,10,&H0D,100)'$Data
+       CycleN2InStringNH4=CycleN2InString2
+        N2test2 = SerialInChk(com2)
+        SerialIn (CycleN2InString3,com2,10,&H0D,100)'$empty CR
+        N2test3 = SerialInChk(com2)
+        SerialIn (CycleNInString4,com2,10,&H0D,100)'"PO4>" Prompt
+       Delay(1,3,Sec)
+    If N2test1>40 Then 'its real data so parse it out    
+      SplitStr (N2InString(),CycleN2InString2,CHR(09),17,0)'parse data from    'CycleP to inString as tab sv, parse numbers and ignore text
+      '17 pieces of data
+      N2month = N2InString(1)'ASCII STRING 10 'this is the serial number as a float
+      N2day= N2InString(2)'ASCII FLOAT 5..11 
+      N2year= N2InString(3)'ASCII FLOAT 5..11 
+      N2hour = N2InString(4)'AF 4..9 
+      N2min = N2InString(5)'AF 6..11 
+ '     N2sec = N2InString(6) 
+  
+      CycleN2Run = N2InString(7)'ASCII FLOAT 5..11 
+      CAN2H4 = N2InString(8)'AF 4..9 
+      VAN2H4 = N2InString(9)'AF 4..9 
+      VASN2 = N2InString(10) 
+  	  N2State = N2InString(11)
+      N2Flush1 = N2InString(12)
+      N2AmbMin = N2InString(13)
+      N2Flush2 = N2InString(14) 
+      N2CalMin = N2InString(15)
+      N2Remaining = N2InString(16) 
+      N2Diag = N2InString(17)'AF 6..11
+
+     Else
+			Call SetNansN2H4
+ 	  EndIf
+  EndSub
+  
+	'EnterSub instructions here
+Sub SetNansN2H4
+    N2month = "NAN"'ASCII STRING 10 'this is the serial number as a float
+    N2day= "NAN"'ASCII FLOAT 5..11 
+    N2year= "NAN"'ASCII FLOAT 5..11 
+    N2hour = "NAN"'AF 4..9 
+    N2min = "NAN"'AF 6..11 
+ '   N2sec = "NAN" 
+    CycleN2Run = "NAN"'ASCII FLOAT 5..11 
+    CAN2H4 = "NAN"'AF 4..9 
+    VAN2H4 = "NAN"'AF 4..9 
+    VASN2 = "NAN" 
+ 		N2State = "NAN"
+   N2Flush1 = "NAN"
+    N2AmbMin = "NAN"
+    N2Flush2 = "NAN"
+    N2CalMin = "NAN"
+    N2Remaining = "NAN"
+    N2Diag = "NAN"'AF 6..11 
+  EndSub
+Sub WakeCycleN2H4
+   N2test1=0
+
+  For i=1 To 3
+  SerialOutBlock (com2,CHR(32) + CHR(13),2)
+  SerialFlush(com2)
+  Delay(0,1000,mSec)'Wait 
+	Next i
+EndSub
+
+Sub PutToSleepN2H4
+    SerialFlush(com2)
+    SerialOutBlock (com2,"$SLP" + CHR(13),5)'Put er to sleep
+    SerialFlush(com2)
+EndSub
+
+'data table
+'CycN2DataTableAll
+
+
+If TimeIntoInterval(0,CycleInterval,min)
+		  Call SetNansN2H4
+		  Call WakeCycleN2H4
+			Call GetLastDataN2H4
+			Call PutToSleepN2H4
+		EndIf
+		
+		'Call Output Tables
+		CallTable CycN2DataTableAll
+    CallTable CycN2StringTable

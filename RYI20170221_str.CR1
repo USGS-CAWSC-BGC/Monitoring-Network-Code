@@ -1,0 +1,2699 @@
+Const ProgramVersionDate = 20161020
+SequentialMode
+ConstTable (Constants)
+#If Loggertype = CR1000 Then
+Const AdcpPort = Com1
+Const SwitchPort = 4
+Const PS1Com3 = 3
+Const PS1Com5 = 5
+Const PS2Com3 = 3
+Const PS2Com5 = 5
+Const YsiCom3 = 3
+Const YsiCom5 = 5
+Const SlaveCom = Com4
+Const ExtPwrCom = 1
+#ElseIf LoggerType = CR6 Then
+Const AdcpPort = ComC1
+Const SwitchPort = U1
+Const PS1Com3 = U3
+Const PS1Com5 = U5
+Const PS2Com3 = U3
+Const PS2Com5 = U5
+Const YsiCom3 = U3
+Const YsiCom5 = U5
+Const SlaveCom = ComU7
+Const ExtPwrCom = U11
+#EndIf
+EndConstTable
+Const VelocityScaleWater = 1/304.8
+Const ScanRate = 60
+Const ScanUnit = 2
+Const FastScanRate = 15
+Const FastScanUnit = 2
+Const UPbeam = 1
+Const VMpress = 2
+Const PSpress = 3
+Const PSpress2 = 4
+Const YSIpress = 5
+Const FixedLeaderID = 0
+Const VariableLeaderID = 128
+Const CorrelationProfileID = 512
+Const RSSIProfileID = 768
+Const PGoodProfileID = 1024
+Const VelocityProfileID = 256
+Const VMStageID = 16384
+Const BottomID = 1536
+Const MaxBins = 27
+Const MaxBeams = 4
+Const BadVel = -32768
+Const BadDataIndicator = NAN
+Const Meters_to_Feet = 3.280839895
+Const DegToRad = (3.14159265358979323846/180)
+Const yes = True
+Const no = False
+Public SiteID As String * 6
+Public SiteNum As Long
+Public CR1Volts As Float
+Public ExtPwrVolt As Float
+Public PTempC As Float
+Public PTempF As Float
+Public RecCalibData As Boolean
+Public DiveVisit As Boolean
+Public DaysSinceDive As Float
+Public LastDive As String * 10
+Dim DiveTimeStamp As String * 23
+Dim Rec15minFlag As Boolean
+Dim Rec24HrFlag As Boolean
+Dim Rec1MinFlag As Boolean
+Dim OneMinCount As Long
+Dim RecDataFlag As Boolean
+Dim RecAllVelFlag As Boolean
+Public VemcoRTR As Boolean
+Public IsSubmersed As Boolean
+Public Prompt As String *5
+Dim RecBeamCheckFlag As Boolean
+Dim Counter As Long
+Public LowRatVel As Float
+Dim InitialLRV As Float
+Public HighRatVel As Float
+Dim InitialHRV As Float
+Public LowMeas As Boolean
+Public HighMeas As Boolean
+Dim LowCount As Long
+Dim HighCount As Long
+Public BaudRateHi As Boolean
+Public VMPower As Boolean
+Dim rTime(9) As Float
+Alias rTime(3) = DOM
+Alias rTime(4) = Hour
+Alias rTime(5) = Minute
+Alias rTime(6) = Second
+Alias rTime(7) = MicroSecond
+Public LastScan As String * 6
+Dim RealSeconds As Long
+Dim Mod5Minutes As Long
+Dim Mod15Minutes As Float
+Dim Mod60Minutes As Float
+Dim ModDay As Float
+Dim CdmaScans As Long
+Public HrsCdmaOff As Long
+Dim LoggernetAddr As Long
+Public CdmaWorks As Boolean
+Dim CDMAFailure As Boolean
+Public CycleCdmaPwr As Boolean
+Public IsCDMAOn As Boolean
+Public IsNClosed As Boolean
+Public KeepCDMAon As Boolean
+Public Tech As String * 3
+Public VisitReason As String *100
+Public SerNum As Long
+Public OSVers As String * 18
+Public Program As String * 25
+Public ProgVersDate As String * 8
+Public ProgErrors As Long
+Public Low12Volts As Long
+Public LithBat As Float
+Public SkipScans As Long
+Public FreeCFMem As Float
+Public ErrorEvent As String * 25
+Public Coord As String * 20
+Dim ADCPSN01 As Long
+Dim ADCPSN02 As Long
+Dim ADCPSN03 As Long
+Dim ADCPSN04 As Long
+Public AdcpSN As Long
+Dim InitialAdcpSN As Long
+Public NewADCP As Boolean
+Public PS1SN As String * 40
+Dim InitialPS1SN As String * 40
+Public NewPS1 As Boolean
+Public PS2SN As String * 40
+Dim InitialPS2SN As String * 40
+Public NewPS2 As Boolean
+Public BadChecksum As Long
+Public HeaderMismatch As Long
+Dim NumbytesZero As Long
+Public CalcCheckSum As Long
+Public EnsChecksum As Long
+Dim TempL As Long
+Public Numbytes
+Public BadEnsemble As Long
+Public ScanNo As Long
+Public DebugBinVelOne As Long
+Public DebugBinVelTwo As Long
+Dim Longarray(2000) As Long
+Dim Nums(2) As Long
+Dim i As Long
+Dim j As Long
+Dim k As Long
+Dim m As Long
+Dim v As Long
+Dim EnsembleLen As Long
+Dim Datatypes As Long
+Dim Offsets(25) As Long
+Public BinSize As Long
+Public NumBins As Long
+Public EnsPings As Long
+Public NumBeams As Long
+Public BlankDist As Long
+Public EX As Long
+Public ES As Long
+Public Decode As String * 70
+Dim FramingError As Long
+Dim FixedLeadOffset As Long
+Dim MSB As Long
+Dim MSB1 As Long
+Dim LSB As Long
+Dim ReceivedBytes As Long
+Dim TempId As Long
+Dim UseAutoLastBin As Boolean
+Public UseDir As Boolean
+Public PosFlowDir As Float
+Public RecordAll As Boolean
+Public CalcQ As Boolean
+Public UseV2 As Boolean
+Public iVel As Float
+Public aVel As Float
+Public Q As Float
+Public BadQCount As Long
+Public MinExpVel As Long
+Public MaxExpVel As Long
+Public FlowSign As Long
+Public BadVelCount As Long
+Public BadBinCnt As Long
+Public DataErr As Long
+Public BadVelFlag As Boolean
+Public BadQFlag As Boolean
+Dim VelOffset As Long
+Dim Bin As Long
+Public StartBin As Long
+Public StartEbbBin As Long
+Public EndEbbBin As Long
+Public StartFldBin As Long
+Public EndFldBin As Long
+Public EndBin As Long
+Public BiRating As Boolean = False
+Public BiRatOK As Boolean = False
+Public UseBiRat As Boolean = False
+Public BiRatTran As Float
+Dim Beam As Long
+Dim temp As Long
+Dim Index As Long
+Dim BinVel As Float
+Dim BinStep As Long
+Dim EnsBin As Long
+Dim ensVelocity(30,4)As Float
+Public V1(27) As Float
+Public V2(27) As Float
+Public V3(27) As Float
+Public V4(27) As Float
+Public VMBinVel(27) As Float
+Dim VelCount As Long
+Dim BadBinCount As Long
+Dim V1Sum As Float
+Dim V1EbbSum As Float
+Dim V1FldSum As Float
+Dim V2Sum As Float
+Dim V2EbbSum As Float
+Dim V2FldSum As Float
+Dim V3Sum As Float
+Dim V4Sum As Float
+Dim V1Disable(27) As Boolean
+Dim V2Disable(27) As Boolean
+Dim V3Disable(27) As Boolean
+Dim V4disable(27) As Boolean
+Dim VmBinVelDisable(27) As Boolean
+Public V1AVG As Float
+Dim V1EbbAvg As Float
+Dim V2EbbAvg As Float
+Public V2AVG As Float
+Dim V1FldAvg As Float
+Dim V2FldAvg As Float
+Public V3AVG As Float
+Public V4AVG As Float
+Dim Cnt As Long
+Dim V1Cnt As Long
+Dim V1EbbCnt As Long
+Dim V2EbbCnt As Long
+Dim V1FldCnt As Long
+Dim V2FldCnt As Long
+Dim V2Cnt As Long
+Dim V3Cnt As Long
+Dim V4Cnt As Long
+Const rad = 3.14159/180
+Const deg = 180/3.14159
+Dim VarLeadOffset As Long
+Public BIT As Long
+Public EnsembleNo As Long
+Dim RSSIOffset As Long
+Dim ensRSSI(27,4) As Long
+Dim nRSSI As Long
+Dim AccumRSSI As Long
+Dim AvgRSSI(27) As Long
+Public AvgRSSIStartBin As Long
+Public AvgRSSIEndBin As Long
+Dim AvgRSSIcounter As Long
+Dim AvgRSSIAccum As Long
+Public AvgSwathRSSI As Float
+Dim CorrOffset As Long
+Dim ensCorr(27,4) As Long
+Dim TempCorr(4)
+Dim nCorr As Long
+Dim AccumCorr As Long
+Dim AvgCorr(27) As Long
+Dim StdDevCorr(27) As Float
+Public VMStageOffset As Long
+Dim L1SB As Long
+Dim M1SB As Long
+Dim TempM As Float
+Public VMTemp As Long
+Public VMPSTemp As Long
+Public WHPSTemp As Float
+Public WHTempM As Float
+Public WHTempK As Float
+Public IsCM As Boolean
+Public IsVADCP As Boolean
+Public SelectFilter As Long
+Public LastGoodBin As Long
+Dim cntBin As Long
+Dim cntBin2 As Long
+Public RSSIThreshold As Float
+Public StdCorrThreshold As Float
+Public CorrThreshold As Float
+Dim TestEns As Long
+Dim EnsLoop As Long
+Dim AvgRunEns As Float
+Dim RunEnsSpikes As Long
+Dim BadEnsCount As Long
+Dim BadEnsFlag As Boolean
+Dim LoopInterval As Long
+Dim FastLoopInterval As Long
+Dim EventCDMAFlag As Boolean
+Dim EventVoltFlag As Boolean
+Dim EventYSIFlag As Boolean
+Dim EventQFlag As Boolean
+Public PSPressPort As Long
+Public PSPressAddr As Long
+Public PSPressDataIn As Boolean
+Public PSPressure(2) As Float
+Public PSpress2Stg(2) As Float
+Public PSpress2Port As Long
+Public PSpress2Addr As Long
+Public PSpress2DataIn As Boolean
+Public Stage1 As Float
+Public Stage2 As Float
+Public StgDiff As Float
+Public UpBeamStg As Float
+Public VMPressStg As Float
+Public PS1Stg As Float
+Public PS2Stg As Float
+Public YsiStg As Float
+Public TrueUpBeamStg As Float
+Public TrueVMPressStg As Float
+Public TruePS1Stg As Float
+Public TruePS2Stg As Float
+Public TrueYsiStg As Float
+Dim SelStgUsed As String
+Public SelStg2 As String
+Public UpBeamOffset As Float
+Public VMPressOffset As Float
+Public PS1Offset As Float
+Public PS2Offset As Float
+Public YsiOffset As Float
+Public StgSelect As String
+Public Area As Float
+Public BadStgFlag As Boolean
+Public BadStgCount As Long
+Public MaxExpStg As Long
+Public MinExpStg As Long
+Public rStg0 As Float
+Public rStg1 As Float
+Public rStg2 As Float
+Public rVel0 As Float
+Public rVel1 As Float
+Public rVel2 As Float
+Public rVel3 As Float
+Public UpVel0 As Float
+Public UpVel1 As Float
+Public UpVel2 As Float
+Public UpVel3 As Float
+Public LowVel0 As Float
+Public LowVel1 As Float
+Public LowVel2 As Float
+Public LowVel3 As Float
+Public Trans As String * 4
+Public YsiSonde As String * 3
+Public YsiSensor(21) As Float
+Public TempDiff As Float
+Public YsiTempC As Float
+Public YsiTempF As Float
+Public YsiSpCond As Float
+Public YsiTurbFNU As Float
+Public YsiChlorMGL As Float
+Public YsiChlorRFU As Float
+Public YsiDOmgL As Float
+Public YsiDOSat As Float
+Public YsiPH As Float
+Public YsiORP As Float
+Public YsiDepth As Float
+Public YsiVolts As Float
+Public YsiBGA As Float
+Public YsiFdomRFU As Float
+Public YsiFdomQSU As Float
+Public YsiAmmonium As Float
+Public YsiNitrate As Float
+Public YsiChloride As Float
+Public YsiWiperPos As Float
+Public Wiper1Min As Float
+Public WiperTestCount As Float
+Public WiperInCount As Float
+Public LocTempC As Long
+Public LocSpCond As Long
+Public LocTurbFNU As Long
+Public LocVolts As Long
+Public LocDOmgL As Long
+Public LocDOSat As Long
+Public LocPH As Long
+Public LocORP As Float
+Public LocDepth As Long
+Public LocChlorMGL As Long
+Public LocChlorRFU As Long
+Public LocBGA As Float
+Public LocFdomRFU As Float
+Public LocFdomQSU As Float
+Public LocAmmonium As Float
+Public LocNitrate As Float
+Public LocChloride As Float
+Public LocWiperPos As Float
+Public YsiAddr As Long
+Public YsiPort As Long
+Public YsiErrCount As Long
+Public WiperErrCount As Float
+Public WiperOut As Boolean
+Dim YsiSdiErr As Boolean
+Public MilliToMicro As Boolean
+Public EXOdead As Boolean
+Public EXOdeadCnt As Long
+Public VMtempF As Float
+Public VMupBeam As Float
+Public VMpressure As Float
+Public WHpressure As Float
+Public VMHeading As Float
+Public VMpitch As Float
+Public VMroll As Float
+Public VMVolts As Float
+Public VMtempC As Float
+Public VMdataIn As Boolean
+Public DepthMSB As Long
+Public DepthMSB1 As Long
+Public DepthLSB As Long
+Public DepthLSB1 As Long
+Public IDwords(14) As Long
+Public LSBTemp As Long
+Public LSB1Temp As Long
+Public MSBTemp As Long
+Public MSB1Temp As Long
+Public Banner As String * 200
+Public Warning As String * 2000
+Public VMMemString As String * 200
+Public NoiseFlrParsed As String * 105
+Public FilterString As String * 5
+Public StartString
+Public NoiseHGainW(2)
+Public NoiseLGainW(2)
+Public NoiseHGainN(2)
+Public NoiseLGainN(2)
+Public CMD As String
+Public CSCmd As String * 10
+Public SendCMD As Boolean
+Public WakeUpVM As Boolean
+Public SendPT3 As Boolean
+Public PT3Time As Long
+Public RestartAttempts As Long
+Public VMLowMem As Boolean
+Public VMLowMemCount As Float
+Public VMMemFree As Float
+Public VMLowMemVal As Float
+Public VMNoMem As Boolean
+Public VMNoMemCount As Float
+Public RecErased As Boolean
+Public RecEraseString As String * 200
+Public OutString As String * 1000
+Public SendFlowData As Boolean
+PreserveVariables
+DataTable (DataOut,Rec15minFlag,-1)
+OpenInterval
+CardOut (0 ,-1)
+Sample (1,SiteID,String)
+Sample (1,SiteNum,String)
+Sample (1,iVel,IEEE4)
+Sample (1,Stage1,IEEE4)
+Average (1,Stage1,IEEE4,BadStgFlag)
+Average (1,iVel,IEEE4,BadVelFlag)
+Average (1,aVel,IEEE4,BadQFlag)
+Average (1,Q,IEEE4,BadQFlag)
+Sample (1,BadStgCount,FP2)
+Sample (1,BadVelCount,FP2)
+Sample (1,BadQCount,FP2)
+Minimum (1,CR1Volts,FP2,False,False)
+Minimum (1,VMVolts,FP2,False,False)
+Average (1,VMpitch,FP2,False)
+Average (1,VMroll,FP2,False)
+Average (1,VMtempC,FP2,False)
+Sample (1,YsiTempC,FP2)
+Sample (1,YsiSpCond,IEEE4)
+Sample (1,YsiVolts,FP2)
+Sample (1,StgSelect,String)
+Average (27,VMBinVel(),IEEE4,VmBinVelDisable())
+Sample (1,YsiDOmgL,FP2)
+Sample (1,YsiPH,FP2)
+Sample (1,YsiTurbFNU,FP2)
+Sample (1,YsiChlorMGL,FP2)
+Sample (1,YsiChlorRFU,FP2)
+Average (1,YsiDepth,FP2,False)
+Average (1,YsiTurbFNU,FP2,False)
+Median (1,YsiTurbFNU,15,FP2,False)
+Average(1,AvgSwathRSSI,FP2,False)
+Maximum (1,LastGoodBin,FP2,False,False)
+Sample (1,LowRatVel,FP2)
+Sample (1,HighRatVel,FP2)
+Sample (1,VMHeading,FP2)
+Sample (1,YsiDOSat,FP2)
+Sample (1,YsiORP,FP2)
+Sample (1,YsiFdomRFU,FP2)
+Sample (1,YsiFdomQSU,FP2)
+Sample (1,YsiBGA,FP2)
+Sample (1,YsiAmmonium,FP2)
+Sample (1,YsiNitrate,FP2)
+Sample (1,YsiChloride,FP2)
+Sample (1,YsiWiperPos,FP2)
+Sample (1,Stage2,FP2)
+Average (1,Stage2,IEEE4,false)
+Average (1,UpBeamStg,IEEE4,false)
+Average (1,VMPressStg,IEEE4,false)
+Average (1,PS1Stg,IEEE4,false)
+Average (1,PS2Stg,IEEE4,false)
+Average (1,YsiStg,IEEE4,false)
+Average (1,StgDiff,IEEE4,False)
+Average (1,TempDiff,IEEE4,False)
+Minimum (1,ExtPwrVolt,FP2,False,False)
+EndTable
+DataTable (VelData,RecAllVelFlag,-1)
+OpenInterval
+CardOut (0 ,-1)
+Sample (1,SiteID,String)
+Sample (1,SiteNum,String)
+Sample(1,Coord,String)
+Sample(1,Decode,String)
+Average(27,V1(),FP2,V1Disable())
+Average(27,V2(),FP2,V2Disable())
+Average(27,V3(),FP2,V3Disable())
+Average(27,V4(),FP2,V4disable())
+Average (108,ensRSSI(),UINT2,False)
+Average (108,ensCorr(),UINT2,False)
+Sample (1,VMHeading,FP2)
+Average (1,VMpitch,FP2,False)
+Average (1,VMroll,FP2,False)
+Average (1,VMtempC,FP2,False)
+EndTable
+DataTable  (QAQCInfo,Rec24HrFlag,1)
+CardOut (0,2000)
+Sample (1,SiteID,String)
+Sample (1,SiteNum,String)
+Sample (1,Tech,String)
+Sample (1,VisitReason,String
+Sample (1,Program,String)
+Sample (1,ProgVersDate,String)
+Sample (1,SerNum,Long)
+Sample (1,OSVers,String)
+Sample (1,AdcpSN,Long)
+Sample (1,IsCM,Boolean)
+Sample (1,NewADCP,Boolean)
+Sample (1,PS1SN,String)
+Sample (1,NewPS1,Boolean)
+Sample (1,PS2SN,String)
+Sample (1,NewPS2,Boolean)
+Sample (1,EX,Long)
+Sample (1,Coord,String)
+Sample (1,Decode,String)
+Sample (1,ProgErrors,Long)
+Sample (1,Low12Volts,Long)
+Sample (1,LithBat,FP2)
+Sample (1,SkipScans,Long)
+Sample (1,FreeCFMem,IEEE4)
+Sample (1,LowMeas,Boolean)
+Sample (1,HighMeas, Boolean)
+Sample (1,BadQCount,Long)
+Sample (1,BadVelCount,Long)
+Sample (1,BadBinCnt,Long)
+Sample (1,BadEnsCount,FP2)
+Sample (1,BadStgCount,Long)
+Sample (1,YsiErrCount,Long)
+Sample (1,RestartAttempts,FP2)
+Sample (1,iVel,FP2)
+Sample (1,Stage1,IEEE4)
+Sample (1,Stage2,IEEE4)
+Sample (1,SelStgUsed,FP2)
+Sample (1,SelStg2,FP2)
+Sample (1,UpBeamStg,IEEE4)
+Sample (1,VMPressStg,IEEE4)
+Sample (1,PS1Stg,IEEE4)
+Sample (1,PS2Stg,IEEE4)
+Sample (1,YsiStg,IEEE4)
+Sample (1,UpBeamOffset,IEEE4)
+Sample (1,VMPressOffset,IEEE4)
+Sample (1,PS1Offset,IEEE4)
+Sample (1,PS2Offset,IEEE4)
+Sample (1,YsiOffset,IEEE4)
+Sample (1,DaysSinceDive,FP2)
+Sample (1,LastDive,String)
+Sample (1,VMtempC,FP2)
+Sample (1,VMpitch,FP2)
+Sample (1,VMroll,FP2)
+Sample (1,CR1Volts,FP2)
+Sample (1,ExtPwrVolt,FP2)
+Maximum (1,PTempC,FP2,false,false)
+Minimum (1,PTempC,FP2,false,false)
+Sample (1,YsiTurbFNU,FP2)
+Sample (1,NumBins,FP2)
+Sample (1,NumBeams,FP2)
+Sample (1,EnsPings,FP2)
+Sample (1,BinSize,FP2)
+Sample (1,BlankDist,FP2)
+Sample (1,StartBin,FP2)
+Sample (1,EndBin,FP2)
+Sample (1,VMHeading,FP2)
+Sample (1,UseV2,Boolean)
+Sample (1,FlowSign,Long)
+Sample (1,CdmaWorks,Boolean)
+Maximum (1,LastGoodBin,FP2,False,False)
+Minimum (1,LastGoodBin,FP2,False,False)
+Average (1,LastGoodBin,FP2,False)
+Sample (1,rStg0,IEEE4)
+Sample (1,rStg1,IEEE4)
+Sample (1,rStg2,IEEE4)
+Sample (1,rVel0,IEEE4)
+Sample (1,rVel1,IEEE4)
+Sample (1,rVel2,IEEE4)
+Sample (1,rVel3,IEEE4)
+Sample (1,UpVel0,IEEE4)
+Sample (1,UpVel1,IEEE4)
+Sample (1,UpVel2,IEEE4)
+Sample (1,UpVel3,IEEE4)
+Sample (1,LowVel0,IEEE4)
+Sample (1,LowVel1,IEEE4)
+Sample (1,LowVel2,IEEE4)
+Sample (1,LowVel3,IEEE4)
+Sample (1,Trans,FP2)
+Sample (1,VMLowMemCount,FP2)
+Sample (1,VMLowMem,Boolean)
+Sample (1,VMMemFree,FP2)
+Sample (1,RecErased,Boolean)
+EndTable
+DataTable(SiteVisit,True,-1)
+CardOut (0,-1000)
+Sample (1,SiteID,String)
+Sample (1,SiteNum,String)
+Sample (1,iVel,IEEE4)
+Sample (1,Q,IEEE4)
+Sample (1,Stage1,IEEE4)
+Sample (1,UpBeamStg,IEEE4)
+Sample (1,VMPressStg,IEEE4)
+Sample (1,PS1Stg,IEEE4)
+Sample (1,PS2Stg,IEEE4)
+Sample (1,YsiStg,IEEE4)
+Sample (1,UpBeamOffset,IEEE4)
+Sample (1,VMPressOffset,IEEE4)
+Sample (1,PS1Offset,IEEE4)
+Sample (1,PS2Offset,IEEE4)
+Sample (1,YsiOffset,IEEE4)
+Sample (1,DiveVisit,Boolean)
+Sample (1,VMtempC,FP2)
+Sample (1,VMpitch,FP2)
+Sample (1,VMroll,FP2)
+Sample (1,CR1Volts,FP2)
+Sample (1,ExtPwrVolt,FP2)
+Sample (1,StartBin,Long)
+Sample (1,EndBin,Long)
+Sample (1,VMHeading,FP2)
+Sample (1,NumBins,Long)
+Sample (1,BlankDist,Long)
+Sample (1,BinSize,Long)
+Sample (1,YsiVolts,FP2)
+Sample (1,YsiTempC,FP2)
+Sample (1,YsiSpCond,IEEE4)
+Sample (1,YsiTurbFNU,FP2)
+Sample (1,YsiDOmgL,FP2)
+Sample (1,YsiPH,FP2)
+Sample (1,YsiChlorMGL,FP2)
+Sample (1,YsiChlorRFU,FP2)
+Sample (1,YsiDepth,FP2)
+Sample (1,YsiDOSat,FP2)
+Sample (1,YsiORP,FP2)
+Sample (1,YsiFdomRFU,FP2)
+Sample (1,YsiFdomQSU,FP2)
+Sample (1,YsiBGA,FP2)
+Sample (1,YsiAmmonium,FP2)
+Sample (1,YsiNitrate,FP2)
+Sample (1,YsiChloride,FP2)
+Sample (1,YsiErrCount,Long)
+Sample (1,BadQCount,Long)
+Sample (1,LithBat,FP2)
+Sample (1,Tech,String)
+Sample (1,VisitReason,String)
+Sample (1,VMMemFree,FP2)
+EndTable
+DataTable (Data1m,Rec1MinFlag,-1)
+OpenInterval
+CardOut (0,-1000)
+Sample (1,SiteID,String)
+Sample (1,SiteNum,String)
+Sample (1,Stage1,IEEE4)
+Sample (1,iVel,IEEE4)
+Sample (1,aVel,IEEE4,)
+Sample (1,Q,IEEE4)
+Sample (1,YsiTempC,FP2)
+Sample (1,YsiSpCond,IEEE4)
+Sample (1,YsiVolts,FP2)
+Sample (1,YsiDOmgL,FP2)
+Sample (1,YsiPH,FP2)
+Sample (1,YsiTurbFNU,FP2)
+Sample (1,YsiChlorMGL,FP2)
+Sample (1,YsiChlorRFU,FP2)
+Sample (1,YsiDepth,FP2)
+Sample (1,YsiDOSat,FP2)
+Sample (1,YsiORP,FP2)
+Sample (1,YsiFdomRFU,FP2)
+Sample (1,YsiFdomQSU,FP2)
+Sample (1,YsiBGA,FP2)
+Sample (1,YsiAmmonium,FP2)
+Sample (1,YsiNitrate,FP2)
+Sample (1,YsiChloride,FP2)
+Sample (1,YsiWiperPos,FP2)
+Sample (27,VMBinVel(),IEEE4)
+Sample (27,V1(),IEEE4)
+Sample (27,V2(),IEEE4)
+Sample (27,V3(),IEEE4)
+Sample (27,V4(),IEEE4)
+Sample (1,LowRatVel,FP2)
+Sample (1,HighRatVel,FP2)
+Sample (1,SelStgUsed,FP2)
+EndTable
+DataTable (BeamCheck,RecBeamCheckFlag,-1)
+OpenInterval
+CardOut (0,-1000)
+Sample (1,SiteID,String)
+Sample (1,Stage1,IEEE4)
+Sample (1,NumBeams,Long)
+Sample (1,NumBins,Long)
+Sample (1,BinSize,Long)
+Sample (1,StartBin,Long)
+Sample (1,EndBin,Long)
+Sample (1,VMpitch,FP2)
+Sample (1,VMroll,FP2)
+Average (108,ensRSSI(),UINT2,False)
+Average (108,ensCorr(),UINT2,False)
+Sample (1,VMupBeam,IEEE4)
+Average (1,VMupBeam,IEEE4,False)
+Sample (1,VMtempC,IEEE4)
+Average (1,VMtempC,IEEE4,False)
+Sample (1,VMVolts,IEEE4)
+Average (1,VMVolts,IEEE4,False)
+Sample (1,ExtPwrVolt,IEEE4)
+Average (1,ExtPwrVolt,IEEE4, False)
+EndTable
+DataTable (NoiseFloor,True,-1)
+OpenInterval
+CardOut (0,-1000)
+Sample (1,SiteID,String)
+Sample (1,SiteNum,String)
+Sample (1,NoiseHGainW(1),FP2)
+Sample (1,NoiseHGainW(2),FP2)
+Sample (1,NoiseHGainN(1),FP2)
+Sample (1,NoiseHGainN(2),FP2)
+Sample (1,NoiseLGainW(1),FP2)
+Sample (1,NoiseLGainW(2),FP2)
+Sample (1,NoiseLGainN(1),FP2)
+Sample (1,NoiseLGainN(2),FP2)
+Sample (1,VMtempC,IEEE4)
+Sample (1,VMVolts,IEEE4)
+Sample (1,ExtPwrVolt,IEEE4)
+EndTable
+Sub GetStartup
+ProgVersDate = ProgramVersionDate
+LastScan = "00:00"
+Tech = "TAV"
+SiteID = "RYI"
+SiteNum = "11455350"
+VisitReason = "Program update"
+StartBin = 1
+EndBin = 27
+StartEbbBin = 1
+EndEbbBin = 26
+StartFldBin = 1
+EndFldBin = 26
+BiRating = False
+BiRatTran = 0
+MinExpStg = 0
+MaxExpStg = 30
+MinExpVel = -5
+MaxExpVel = 10
+LowRatVel = 0
+HighRatVel = 0
+FlowSign = 1
+SelStgUsed = PSpress
+SelStg2 = UPbeam
+UpBeamOffset = 0
+VMPressOffset = 0
+PS1Offset = -6.29122
+PS2Offset = 0
+YsiOffset = 0
+PSPressPort = 3
+PSPressAddr = 0
+PSpress2Port = 5
+PSpress2Addr = 0
+YsiPort = 5
+YsiAddr = 4
+YsiSonde = "No"
+LocTempC = 3
+LocSpCond = 4
+LocTurbFNU = 5
+LocVolts = 9
+LocChlorMGL = 11
+LocChlorRFU = 12
+LocPH = 10
+LocDOmgL = 7
+LocDOSat = 6
+LocDepth = 8
+LocORP = 0
+LocBGA = 0
+LocFdomRFU = 0
+LocFdomQSU = 0
+LocAmmonium = 0
+LocNitrate = 0
+LocChloride = 0
+MilliToMicro = no
+CalcQ = yes
+rStg0 = 30560
+rStg1 = 888.3
+rStg2 = 3.513
+rVel0 = -0.0963
+rVel1 = 0.9309
+rVel2 = 0
+rVel3 = 0
+UpVel0 = 0
+UpVel1 = 0
+UpVel2 = 0
+UpVel3 = 0
+LowVel0 = 0
+LowVel1 = 0
+LowVel2 = 0
+LowVel3 = 0
+Trans = NAN
+AvgRSSIStartBin = StartBin
+AvgRSSIEndBin  = EndBin
+DaysSinceDive = 0
+LastDive = "02/20/2017"
+BiRatOK  = False
+UseBiRat = False
+SendPT3 = True
+PT3Time = 3
+InitialHRV = HighRatVel
+InitialLRV = LowRatVel
+InitialAdcpSN = 0
+InitialPS1SN = 0
+InitialPS2SN = 0
+EXOdead = no
+EXOdeadCnt = 0
+DiveVisit = False
+VMPower = yes
+IsSubmersed = False
+BaudRateHi = yes
+IsNClosed = yes
+KeepCDMAon = yes
+UseAutoLastBin = no
+UseV2 = no
+UseDir = no
+IsCM = yes
+IsVADCP = no
+PosFlowDir = 0
+TrueUpBeamStg = BadDataIndicator
+TrueVMPressStg = BadDataIndicator
+TruePS1Stg = BadDataIndicator
+TruePS2Stg = BadDataIndicator
+TrueYsiStg = BadDataIndicator
+RSSIThreshold = 8
+CorrThreshold = 15
+SelectFilter = 1
+HrsCdmaOff = 4
+CDMAFailure = no
+VemcoRTR = no
+SendFlowData = False
+Rec1MinFlag = no
+OneMinCount = 0
+RecordAll = no
+RecDataFlag = False
+BadStgFlag = yes
+BadVelFlag = yes
+BadQFlag = yes
+LowCount = 0
+HighCount = 0
+LowMeas = no
+HighMeas = no
+VMLowMemVal = 0
+FilterString = "RSSI"
+DebugBinVelOne = 0
+DebugBinVelTwo = 0
+If IsSubmersed = False AND IsNClosed Then
+#If Loggertype = CR1000 Then SW12(0)
+#ElseIf LoggerType =CR6 Then SW12(1,0)
+#EndIf
+Else
+#If Loggertype = CR1000 Then SW12(1)
+#ElseIf LoggerType = CR6 Then SW12(1,1)
+#EndIf
+EndIf
+IsCDMAOn = yes
+EndSub
+Sub ExtPwrSource
+VoltDiff (ExtPwrVolt,1,mV5000,ExtPwrCom,True,0,250,0.01,0)
+End Sub
+Sub GetLastScan
+RealTime (rTime())
+If Minute >= 0 AND Minute < 10 Then
+LastScan = Hour + ":0" + Minute
+Else
+LastScan = Hour + ":" + Minute
+EndIf
+EndSub
+Sub Initialize
+VMdataIn = no
+ScanNo = 0
+BadChecksum = 0
+HeaderMismatch = 0
+NumbytesZero = 0
+ReceivedBytes = 0
+WakeUpVM = False
+RestartAttempts = 0
+AvgRSSIcounter = 0
+AvgRSSIAccum = 0
+AvgSwathRSSI = 0
+For i = 1 To 2000
+Longarray(i) = 0
+Next i
+i=0
+End Sub
+Sub GetSysInfo
+Battery (CR1Volts)
+SerNum = Status.SerialNumber(1,1)
+OSVers = Status.OSVersion(1,1)
+Program = Status.ProgName(1,1)
+ProgErrors = Status.ProgErrors(1,1)
+Low12Volts = Status.Low12VCount(1,1)
+LithBat = Status.LithiumBattery(1,1)
+SkipScans = Status.SkippedScan(1,1)
+FreeCFMem = Status.CardBytesFree(1,1)
+EndSub
+Sub CdmaCheck
+If IsSubmersed = True  Then
+ExitSub
+EndIf
+Select Case IsNClosed
+Case yes
+If KeepCDMAon = yes Then
+#If LoggerType = CR1000 Then SW12(0)
+#ElseIf Loggertype = CR6 Then SW12(1,0)
+#EndIf
+IsCDMAOn = yes
+Else
+If TimeIntoInterval(0,60,min) Then
+#If Loggertype = CR1000 Then SW12(0)
+#ElseIf Loggertype = CR6 Then SW12(1,0)
+#EndIf
+IsCDMAOn = yes
+EndIf
+If TimeIntoInterval(10,60,min) Then
+#If LoggerType = CR1000 Then SW12(1)
+#ElseIf LoggerType = CR6 Then SW12(1,1)
+#EndIf
+IsCDMAOn = no
+EndIf
+EndIf
+Case no
+If KeepCDMAon = yes Then
+#If Loggertype = CR1000 Then SW12(1)
+#ElseIf LoggerType = CR6 Then SW12(1,1)
+#EndIf
+IsCDMAOn = yes
+Else
+If TimeIntoInterval(0,60,min) Then
+#If LoggerType = CR1000 Then SW12(1)
+#ElseIf LoggerType = CR6 Then SW12(1,1)
+#EndIf
+IsCDMAOn = yes
+EndIf
+If TimeIntoInterval(10,60,min) Then
+#If Loggertype = CR1000 Then SW12(0)
+#ElseIf Loggertype = CR6 Then SW12(1,0)
+#EndIf
+IsCDMAOn = no
+EndIf
+EndIf
+EndSelect
+If CycleCdmaPwr = yes Then
+If IsNClosed Then
+#If Loggertype = CR1000 Then SW12(1)
+#ElseIf Loggertype = CR6 Then SW12(1,1)
+#EndIf
+Else
+#If Loggertype = CR1000 Then SW12(0)
+#ElseIf LoggerType = CR6 Then SW12(1,0)
+#EndIf
+EndIf
+IsCDMAOn = no
+CycleCdmaPwr = no
+EndIf
+LoggernetAddr = Route(4094)
+If LoggernetAddr = 4094 Then
+CdmaWorks = yes
+CdmaScans = 0
+CDMAFailure = no
+Else
+CdmaWorks = no
+CdmaScans = CdmaScans + 1
+If (CdmaScans >= HrsCdmaOff * (FastLoopInterval * 4)) AND (EventCDMAFlag = no) Then
+If IsNClosed Then
+#If Loggertype = CR1000 Then SW12(1)
+#ElseIf Loggertype = CR6 Then SW12(1,1)
+#EndIf
+Else
+#If Loggertype = CR1000 Then SW12(0)
+#ElseIf Loggertype = CR6 Then SW12(1,0)
+#EndIf
+EndIf
+IsCDMAOn = no
+CDMAFailure = yes
+CdmaScans = 0
+EndIf
+EndIf
+EndSub
+Sub SerialDataOut
+OutString = Q+","+iVel+","+Stage1+","+VMtempF+","+VMVolts+","+CR1Volts+","+PTempF
+SerialOut (SlaveCom,OutString,"",0,0)
+EndSub
+Sub (SendSetup)
+If (SendCMD) Then
+Banner = ""
+Warning = ""
+CSCmd = ""
+If CMD = "" Then
+SendCMD = False
+ExitSub
+EndIf
+SerialFlush (AdcpPort)
+Call CycleVMPower
+If BaudRateHi = True Then
+SerialOpen (AdcpPort,38400,0,0,2000)
+Else
+SerialOpen (AdcpPort,9600,0,0,2000)
+EndIf
+Delay (1,1,Sec)
+SerialIn (Banner,AdcpPort,500,">",200)
+SerialFlush (AdcpPort)
+Delay (1,1,Sec)
+SerialOut (AdcpPort,"+++" + CHR(13) + CHR(10),"",0,100)
+SerialIn (Banner,AdcpPort,500,">",200)
+SerialIn (Prompt,AdcpPort,100,-1,100)
+SerialFlush (AdcpPort)
+Delay (1,500,mSec)
+SerialOut (AdcpPort,CMD + CHR(13) + CHR(10),"",0,100)
+SerialIn (Warning,AdcpPort,150,-1,2000)
+SerialFlush (AdcpPort)
+SerialOut (AdcpPort,"CS" + CHR(13) + CHR(10),"",0,100)
+SerialIn (CSCmd,AdcpPort,100,-1,100)
+SerialFlush (AdcpPort)
+SendCMD = False
+Call EraseWH
+Call ParsePT3
+EndIf
+EndSub
+Sub EraseWH
+If CMD = "RE ErAsE" Then
+RecEraseString = Mid (Warning,23,15)
+Else
+RecEraseString = ""
+EndIf
+If RecEraseString = "Recorder erased" Then
+RecErased = True
+EndIf
+If IfTime (10,1440,min) AND RecErased = True Then
+RecErased = False
+EndIf
+EndSub
+Sub ParsePT3
+If IsCM = False Then ExitSub
+If CMD = "PT3" Then
+VisitReason = "Sent PT3 Command to ADVM"
+StartString = InStr (1600,Warning,FilterString,2)
+NoiseFlrParsed = Mid (Warning,StartString,104)
+NoiseHGainW(1) = Mid (NoiseFlrParsed,33,2)
+NoiseHGainW(2) = Mid (NoiseFlrParsed,37,2)
+NoiseLGainW(1) = Mid (NoiseFlrParsed,52,2)
+NoiseLGainW(2) = Mid (NoiseFlrParsed,56,2)
+NoiseHGainN(1) = Mid (NoiseFlrParsed,71,2)
+NoiseHGainN(2) = Mid (NoiseFlrParsed,75,2)
+NoiseLGainN(1) = Mid (NoiseFlrParsed,90,2)
+NoiseLGainN(2) = Mid (NoiseFlrParsed,94,2)
+Else
+Warning = ""
+EndIf
+EndSub
+Sub WakeVM
+Banner = ""
+CSCmd = ""
+Call CycleVmPower
+If BaudRateHi = True Then
+SerialOpen (AdcpPort,38400,0,0,2000)
+Else
+SerialOpen (AdcpPort,9600,0,0,2000)
+EndIf
+If IsVADCP = True Then
+SerialOut (AdcpPort,"+++","",0,100)
+Delay (1,1,Sec)
+SerialIn (Banner,AdcpPort,100,-1,100)
+SerialFlush (AdcpPort)
+SerialOut (AdcpPort,"CSTOP" + CHR(13) + CHR(10),"",0,100)
+SerialIn (CSCmd,AdcpPort,100,-1,100)
+SerialFlush (AdcpPort)
+Delay (1,1,Sec)
+SerialOut (AdcpPort,"CS"+ CHR(13) + CHR(10),"",0,100)
+SerialIn (CSCmd,AdcpPort,100,-1,100)
+SerialFlush (AdcpPort)
+RestartAttempts = RestartAttempts + 1
+Else
+Delay (1,1,Sec)
+SerialIn (Banner,AdcpPort,100,-1,100)
+SerialFlush (AdcpPort)
+SerialOut (AdcpPort,"CS"+ CHR(13) + CHR(10),"",0,100)
+SerialIn (CSCmd,AdcpPort,100,-1,100)
+SerialFlush (AdcpPort)
+RestartAttempts = RestartAttempts + 1
+EndIf
+EndSub
+Sub CycleVMPower
+Select Case IsSubmersed
+Case False
+SerialFlush (AdcpPort)
+PortSet (SwitchPort,1 )
+Delay (1,3,Sec)
+PortSet (SwitchPort,0)
+Case True
+SerialFlush (AdcpPort)
+#If Loggertype = CR1000 Then SW12(0)
+#ElseIf LoggerType = CR6 Then SW12(1,0)
+#EndIf
+Delay (1,3,Sec)
+#If Loggertype = CR1000 Then SW12(1)
+#ElseIf Loggertype = CR6 Then SW12(1,1)
+#EndIf
+EndIf
+EndSub
+Sub ToggleVMPower
+Select Case IsSubmersed
+Case False
+If VMPower = True Then
+ExitSub
+EndIf
+If VMPower = False Then
+SerialFlush (AdcpPort)
+PortSet (SwitchPort,1)
+EndIf
+Case True
+If VMPower = True Then
+#If Loggertype = CR1000 Then SW12(1)
+#ElseIf Loggertype = CR6 Then SW12(1,1)
+#EndIf
+ExitSub
+Else
+SerialFlush (AdcpPort)
+#If Loggertype = CR1000 Then SW12(0)
+#ElseIf Loggertype = CR6 Then SW12(1,0)
+#EndIf
+EndIf
+EndIf
+EndSub
+Sub GetVMFreeMem
+Banner = ""
+Warning = ""
+If IsCM = True OR IsVADCP = True Then ExitSub
+If IfTime(10,1440,Min) AND RecCalibData = False Then
+SerialOut (AdcpPort,"+++" + CHR(13) + CHR(10),"",0,100)
+SerialIn (Banner,AdcpPort,500,">",200)
+SerialIn (Prompt,AdcpPort,100,-1,100)
+SerialFlush (AdcpPort)
+Delay (1,500,mSec)
+SerialOut (AdcpPort,"RS?" + CHR(13) + CHR(10),"",0,100)
+SerialIn (VMMemString,AdcpPort,150,-1,150)
+SerialFlush (AdcpPort)
+SerialOut (AdcpPort,"CS" + CHR(13) + CHR(10),"",0,100)
+SerialIn (CSCmd,AdcpPort,100,-1,100)
+SerialFlush (AdcpPort)
+SendCMD = False
+VMMemFree = Mid (VMMemString,17,3)
+Else
+VMMemString = ""
+If IsCM = False AND IsVADCP = False AND VMMemFree <= VMLowMemVal Then
+VMLowMem = True
+VMLowMemCount = VMLowMemCount + 1
+Else
+VMLowMem = False
+VMLowMemCount = 0
+EndIf
+If IsCM = False AND VMMemFree = 0 Then
+VMNoMem = True
+VMNoMemCount = VMNoMemCount + 1
+Else
+VMNoMem = False
+VMNoMemCount = 0
+EndIf
+EndIf
+EndSub
+Sub GetYsiSonde
+YsiSonde = LowerCase(YsiSonde)
+If YsiSonde = "yes" Then
+Select Case YsiPort
+Case 3
+SDI12Recorder (YsiSensor(),YsiCom3,YsiAddr,"C!",1.0,0)
+Case 5
+SDI12Recorder (YsiSensor(),YsiCom5,YsiAddr,"C!",1.0,0)
+EndSelect
+If YsiSensor(1) <> NAN Then
+YsiSdiErr = no
+EXOdead = no
+EXOdeadCnt = 0
+If LocTempC > 0 Then YsiTempC = YsiSensor(LocTempC)
+If LocSpCond > 0 Then YsiSpCond = YsiSensor(LocSpCond)
+If MilliToMicro = yes Then YsiSpCond = YsiSpCond * 1000
+If LocVolts > 0 Then YsiVolts = YsiSensor(LocVolts)
+If LocDOmgL > 0 Then YsiDOmgL = YsiSensor(LocDOmgL)
+If LocDOSat > 0 Then YsiDOSat = YsiSensor(LocDOSat)
+If LocPH > 0 Then YsiPH = YsiSensor(LocPH)
+If LocORP > 0 Then YsiORP = YsiSensor(LocORP)
+If LocDepth > 0 Then YsiDepth = YsiSensor(LocDepth)
+If LocTurbFNU > 0 Then YsiTurbFNU = YsiSensor(LocTurbFNU)
+If LocFdomRFU > 0 Then YsiFdomRFU = YsiSensor(LocFdomRFU)
+If LocFdomQSU > 0 Then YsiFdomQSU = YsiSensor(LocFdomQSU)
+If LocChlorMGL > 0 Then YsiChlorMGL = YsiSensor(LocChlorMGL)
+If LocChlorRFU > 0 Then YsiChlorRFU = YsiSensor(LocChlorRFU)
+If LocBGA > 0 Then YsiBGA = YsiSensor(LocBGA)
+If LocAmmonium > 0 Then YsiAmmonium = YsiSensor(LocAmmonium)
+If LocNitrate > 0 Then YsiNitrate = YsiSensor(LocNitrate)
+If LocChloride > 0 Then YsiChloride = YsiSensor(LocChloride)
+If LocWiperPos > 0 Then YsiWiperPos = YsiSensor(LocWiperPos)
+YsiTempF = YsiTempC*1.8+32
+Wiper1min = Data1m.YsiWiperPos
+If YsiWiperPos > Data1m.YsiWiperPos + 0.1 OR YsiWiperPos < Data1m.YsiWiperPos - 0.1 Then
+WiperErrCount = WiperErrCount + 1
+Else
+WiperErrCount = 0
+WiperTestCount = WiperTestCount + 1
+EndIf
+If WiperErrCount >= 15 Then
+WiperOut = True
+Else
+WiperOut = False
+EndIf
+If YsiWiperPos < Data1m.YsiWiperPos + 0.1 AND YsiWiperPos > Data1m.YsiWiperPos - 0.1 Then
+WiperInCount = WiperInCount + 1
+EndIf
+Else
+YsiErrCount = YsiErrCount + 1
+YsiSdiErr = yes
+YsiVolts = -999999
+YsiSensor() = NAN
+If EXOdead Then
+CycleCdmaPwr = yes
+EXOdeadCnt = 0
+EXOdead = no
+Else
+If EXOdeadCnt >= 59 Then
+EXOdead = yes
+Else
+EXOdeadCnt = EXOdeadCnt + 1
+EndIf
+EndIf
+EndIf
+EndIf
+EndSub
+Sub GetStage
+If IsCM = no Then
+VMpressure = WHpressure
+EndIf
+Call GetPSPress
+Call GetPsPress2
+UpBeamStg = VMupBeam + UpBeamOffset
+VMPressStg = VMpressure + VMPressOffset
+PS1Stg = PSPressure(1) + PS1Offset
+PS2Stg = PSpress2Stg(1) + PS2Offset
+YsiStg = YsiDepth + YsiOffset
+Select Case SelStgUsed
+Case UPbeam
+If (VMdataIn = yes AND VMupBeam <> NAN) Then
+Stage1 = UpBeamStg
+BadStgFlag = no
+Else
+BadStgFlag = yes
+Stage1 = BadDataIndicator
+EndIf
+Case VMpress
+If (VMdataIn = yes AND VMpressure <> NAN) Then
+Stage1 = VMPressStg
+BadStgFlag = no
+Else
+BadStgFlag = yes
+Stage1 = BadDataIndicator
+EndIf
+Case PSpress
+If PSPressDataIn = yes Then
+Stage1 = PS1Stg
+BadStgFlag = no
+Else
+BadStgFlag = yes
+Stage1 = BadDataIndicator
+EndIf
+Case PSpress2
+If PSpress2DataIn = yes Then
+Stage1 = PS2Stg
+BadStgFlag = no
+Else
+BadStgFlag = yes
+Stage1 = BadDataIndicator
+EndIf
+Case YSIpress
+If YsiSdiErr = no Then
+Stage1 = YsiStg
+BadStgFlag = no
+Else
+BadStgFlag = yes
+Stage1 = BadDataIndicator
+EndIf
+EndSelect
+Select Case SelStg2
+Case UPbeam
+If (VMdataIn = yes AND VMupBeam <> NAN) Then
+Stage2 = UpBeamStg
+Else
+Stage2 = BadDataIndicator
+EndIf
+Case VMpress
+If (VMdataIn = yes AND VMpressure <> NAN) Then
+Stage2 = VMPressStg
+Else
+Stage2 = BadDataIndicator
+EndIf
+Case PSpress
+If PSPressDataIn = yes Then
+Stage2 = PS1Stg
+Else
+Stage2 = BadDataIndicator
+EndIf
+Case PSpress2
+If PSpress2DataIn = yes Then
+Stage2 = PS2Stg
+Else
+Stage2 = BadDataIndicator
+EndIf
+Case YSIpress
+If YsiSdiErr = no Then
+Stage2 = YsiStg
+Else
+Stage2 = BadDataIndicator
+EndIf
+EndSelect
+If BadStgFlag = no Then
+If (Stage1 > MaxExpStg) OR (Stage1 < MinExpStg) Then
+BadStgFlag = yes
+Stage1 = BadDataIndicator
+BadStgCount = BadStgCount + 1
+Else
+EndIf
+Else
+BadStgCount = BadStgCount + 1
+EndIf
+StgSelect = SelStgUsed + ":" + SelStg2
+EndSub
+Sub TrueStage
+If TrueUpBeamStg = BadDataIndicator AND TrueVMPressStg = BadDataIndicator AND TruePS1Stg = BadDataIndicator AND TruePS2Stg = BadDataIndicator AND TrueYsiStg = BadDataIndicator Then
+ExitSub
+EndIf
+If ((TrueUpBeamStg <> BadDataIndicator) AND (VMupBeam <> BadDataIndicator)) Then
+UpBeamOffset = TrueUpBeamStg-VMupBeam
+EndIf
+If ((TrueVMPressStg <> BadDataIndicator) AND (VMpressure <> BadDataIndicator)) Then
+VMPressOffset = TrueVMPressStg-VMpressure
+EndIf
+If ((TruePS1Stg <> BadDataIndicator) AND (PSPressure(1) <> BadDataIndicator)) Then
+PS1Offset = TruePS1Stg-PSPressure(1)
+EndIf
+If ((TruePS2Stg <> BadDataIndicator) AND (PSpress2Stg(1) <> BadDataIndicator)) Then
+PS2Offset = TruePS2Stg - PSpress2Stg(1)
+EndIf
+If ((TrueYsiStg <> BadDataIndicator) AND (YsiDepth <> BadDataIndicator))
+YsiOffset = TrueYsiStg - YsiDepth
+EndIf
+EndSub
+Sub StageDiff
+StgDiff = Stage1 - Stage2
+Round (StgDiff,3)
+EndSub
+Sub GetPsPress
+Select Case PSPressPort
+Case 3
+SDI12Recorder (PSPressure(),PS1Com3,PSPressAddr,"M!",1.0,0)
+Case 5
+SDI12Recorder (PSPressure(),PS1Com5,PSPressAddr,"M!",1.0,0)
+EndSelect
+If PSPressure(1) = NAN Then
+PSPressDataIn = no
+Else
+PSPressDataIn = yes
+EndIf
+EndSub
+Sub GetPSpress2
+Select Case PSpress2Port
+Case 3
+SDI12Recorder (PSpress2Stg(),PS2Com3,PSpress2Addr,"M!",1.0,0)
+Case 5
+SDI12Recorder (PSpress2Stg(),PS2Com5,PSpress2Addr,"M!",1.0,0)
+EndSelect
+If PSpress2Stg(1) = NAN Then
+PSpress2DataIn = no
+Else
+PSpress2DataIn = yes
+EndIf
+EndSub
+Sub GetSN
+If (ModDay > 79270) AND (ModDay < 79390) AND RecCalibData = False Then
+AdcpSN = AdcpSN
+If AdcpSN <> InitialAdcpSN Then
+NewADCP = True
+InitialAdcpSN = AdcpSN
+Else
+NewADCP = False
+EndIf
+Select Case PSPressPort
+Case 3
+SDI12Recorder (PS1SN,PS1Com3,PSPressAddr,"I!",1.0,0)
+If PS1SN <> InitialPS1SN Then
+NewPS1 = True
+InitialPS1SN = PS1SN
+Else
+NewPS1 = False
+EndIf
+Case 5
+SDI12Recorder (PS1SN,PS1Com5,PSPressAddr,"I!",1.0,0)
+If PS1SN <> InitialPS1SN Then
+NewPS1 = True
+InitialPS1SN = PS1SN
+Else
+NewPS1 = False
+EndIf
+EndSelect
+Select Case PSpress2Port
+Case 3
+SDI12Recorder (PS2SN,PS2Com3,PSpress2Addr,"I!",1.0,0)
+If PS2SN <> InitialPS2SN Then
+NewPS2 = True
+InitialPS2SN = PS2SN
+Else
+NewPS2 = False
+EndIf
+Case 5
+SDI12Recorder (PS2SN,PS2Com5,PSpress2Addr,"I!",1.0,0)
+If PS2SN <> InitialPS2SN Then
+NewPS2 = True
+InitialPS2SN = PS2SN
+Else
+NewPS2 = False
+EndIf
+EndSelect
+EndIf
+EndSub
+Sub CalcLoopInterval
+Dim UnitMult As Float
+Select Case ScanUnit
+Case = 1
+UnitMult = 60000
+Case = 2
+UnitMult = 60
+Case = 3
+UnitMult = 1
+Case = 4
+UnitMult = 0.0166666666
+Case = 5
+UnitMult = 0.0006944444
+EndSelect
+LoopInterval = (UnitMult/ScanRate) * 15
+Select Case FastScanUnit
+Case = 1
+UnitMult = 60000
+Case = 2
+UnitMult = 60
+Case = 3
+UnitMult = 1
+Case = 4
+UnitMult = 0.0166666666
+Case = 5
+UnitMult = 0.0006944444
+EndSelect
+FastLoopInterval = (UnitMult/FastScanRate) * 15
+EndSub
+Sub Visits
+If DaysSinceDive = NAN Then DaysSinceDive = NAN AND LastDive = NAN
+If DiveVisit = True Then
+DiveTimeStamp = Status.TimeStamp(1,1)
+DaysSinceDive = 0
+Delay (1,2,Sec)
+LastDive = Left(DiveTimeStamp,10)
+ElseIf (ModDay > 79080) AND (ModDay < 79200) AND DiveVisit = False Then
+DaysSinceDive = DaysSinceDive + 1
+EndIf
+EndSub
+Sub MainDecode
+Datatypes = Longarray(6)
+Datatypes = Datatypes + 1
+For j = 1 To (Datatypes*2) Step 2
+LSB = Longarray(j+6)
+MSB = Longarray(j+7)
+Offsets(Counter)=(LSB + (MSB*256)) + 1
+Counter = Counter + 1
+Next j
+FixedLeadOffset = Offsets(1)
+VarLeadOffset = Offsets(2)
+NumBeams = Longarray(FixedLeadOffset + 8)
+NumBins = Longarray(FixedLeadOffset + 9)
+LSB = Longarray(FixedLeadOffset + 10)
+MSB = Longarray(FixedLeadOffset + 11)
+EnsPings = LSB + (MSB * 256)
+LSB = Longarray(FixedLeadOffset + 12)
+MSB = Longarray(FixedLeadOffset + 13)
+BinSize = LSB + (MSB * 256)
+LSB = Longarray(FixedLeadOffset + 14)
+MSB = Longarray(FixedLeadOffset + 15)
+BlankDist = LSB + (MSB * 256)
+EX = Longarray(FixedLeadOffset + 25)
+If EX <= 7 Then
+Coord = "BEAM"
+Select Case NumBeams
+Case 2
+Decode = "Radial Velocities - V1=Beam1 V2=Beam2 disregard V3 and V4"
+Case 3
+Decode = "Radial Velocities - V1=Beam1 V2=Beam2 V3=Beam3 disregard V4"
+Case 4
+Decode = "Radial Velocities - V1=Beam1 V2=Beam2 V3=Beam3 V4=Beam4"
+Case Else
+Decode = "System could not be decoded"
+End Select
+RecordAll = true
+UseDir = false
+EndIf
+If (EX <= 15) AND (EX > 7) Then
+Coord = "INST"
+Select Case NumBeams
+Case 2
+Decode = "Instrument Coordinates - V1=X V2=Y disregard V3 and V4"
+BiRatOK = True
+Case 3
+Decode = "Instrument Coordinates - V1=X V2=Y disregard V3 V4=Error"
+Case 4
+Decode = "Instrument Coordinates - V1=X V2=Y V3=Z and V4=Error"
+Case Else
+Decode = "System could not be decoded"
+End Select
+UseDir = false
+EndIf
+If (EX <= 23) AND (EX > 15) Then
+Coord = "SHIP"
+Select Case NumBeams
+Case 2
+Decode = "Error! --  Cannot set CM to ship coordinates"
+Case 3
+Decode = "Ship Coordinates - V1=Port V2=Starbord V3=Z and V4=Error"
+Case 4
+Decode = "Ship Coordinates - V1=Port V2=Starbord V3=Z and V4=Error"
+Case Else
+Decode = "System could not be decoded"
+End Select
+UseDir = false
+EndIf
+If (EX <= 31) AND (EX > 23) Then
+Coord = "EARTH"
+Select Case NumBeams
+Case 2
+Decode = "Error! --  Cannot set CM to Earth coordinates"
+Case 3
+Decode = "Earth Coordinates - V1=East V2=North V3=Z and V4=Error"
+RecordAll = true
+UseDir = false
+Case 4
+Decode = "Earth Coordinates - V1=East V2=North V3=Z and V4=Error"
+RecordAll = true
+Case Else
+Decode = "System could not be decoded"
+End Select
+EndIf
+ADCPSN01 = Longarray(FixedLeadOffset + 57)
+ADCPSN02 = Longarray(FixedLeadOffset + 56)
+ADCPSN03 = Longarray(FixedLeadOffset + 55)
+ADCPSN04 = Longarray(FixedLeadOffset + 54)
+AdcpSN = ADCPSN04 + (ADCPSN03*256) + (ADCPSN02*65536) +(ADCPSN01*16777216)
+Call VarLeadDecode
+IsCM = no
+For m = 3 To Datatypes
+LSB = Longarray(Offsets(m))
+MSB = Longarray(Offsets(m) + 1)
+TempId = LSB + (MSB * 256)
+IDwords(m) = TempId
+Select Case TempId
+Case CorrelationProfileID
+CorrOffset = Offsets(m)
+Call CorrelationDecode
+Case RSSIProfileID
+RSSIOffset = Offsets(m)
+Call RSSIDecode
+Case VelocityProfileID
+VelOffset = Offsets(m)
+Call VelDecode
+Case VMStageID
+VMStageOffset = Offsets(m)
+If NumBeams = 2 Then
+IsCM = yes
+Else
+IsVADCP = yes
+EndIf
+Call VMStageDecode
+EndSelect
+Next m
+For v = 1 To 2000
+Longarray(v) = 0
+Next v
+EndSub
+Sub(VarLeadDecode)
+VarLeadOffset = VarLeadOffset - 1
+LSB = 0
+MSB = 0
+temp = 0
+LSB = Longarray(VarLeadOffset + 3)
+MSB = Longarray(VarLeadOffset + 4)
+MSB1 = Longarray(VarLeadOffset + 12)
+EnsembleNo = (65536 * MSB1) + (256 * MSB) + LSB
+LSB = Longarray(VarLeadOffset + 13)
+MSB = Longarray(VarLeadOffset + 14)
+BIT = (256 * MSB) + LSB
+LSB = Longarray(VarLeadOffset + 19)
+MSB = Longarray(VarLeadOffset + 20)
+VMHeading = ((256 * MSB) + LSB) * 0.01
+LSB = Longarray(VarLeadOffset + 21)
+MSB = Longarray(VarLeadOffset + 22)
+temp = (256 * MSB) + LSB
+If temp > 32767 Then
+temp = temp - 65536
+EndIf
+VMpitch = temp * 0.01
+LSB = Longarray(VarLeadOffset + 23)
+MSB = Longarray(VarLeadOffset + 24)
+temp = (256 * MSB) + LSB
+If temp > 32767 Then
+temp = temp - 65536
+EndIf
+VMroll = temp * 0.01
+LSB = Longarray(VarLeadOffset + 25)
+MSB = Longarray(VarLeadOffset + 26)
+temp = (256 * MSB) + LSB
+ES = temp
+LSB = Longarray(VarLeadOffset + 27)
+MSB = Longarray(VarLeadOffset + 28)
+temp = (256 * MSB) + LSB
+If temp > 32767 Then
+temp = temp - 65536
+EndIf
+VMtempC = temp * 0.01
+VMtempF = VMtempC * 9/5 + 32
+VMVolts = Longarray(VarLeadOffset + 36)
+WHpressure = 0
+WHTempM = 0
+WHTempK = 0
+WHPSTemp = 0
+DepthLSB = 0
+DepthLSB1 = 0
+DepthMSB = 0
+DepthMSB1 = 0
+DepthLSB = Longarray(VarLeadOffset + 49)
+DepthLSB1 = Longarray(VarLeadOffset + 50)
+DepthMSB = Longarray(VarLeadOffset + 51)
+DepthMSB1 = Longarray(VarLeadOffset + 52)
+WHPSTemp = (16777216 * DepthMSB1) + (65536 * DepthMSB) + (256 * DepthLSB1) + DepthLSB
+If WHPSTemp <> 0 Then
+WHTempK = WHPSTemp/100
+WHTempM = (WHTempK * (1.02-0.00069*ES))/10
+WHpressure = WHTempM * Meters_to_Feet
+Else
+WHpressure = BadDataIndicator
+EndIf
+EndSub
+Sub(CorrelationDecode)
+For Bin = 1 To MaxBins
+For Beam = 1 To MaxBeams
+ensCorr(Bin,Beam) = 0
+Next Beam
+Next Bin
+BinStep = 1
+EnsBin = 0
+CorrOffset = CorrOffset + 1
+For Bin = 1 To NumBins
+nCorr = 0
+AccumCorr = 0
+temp = CorrOffset + (4 * EnsBin)
+EnsBin = EnsBin + BinStep
+For Beam = 1 To NumBeams
+AccumCorr = AccumCorr + Longarray(temp + Beam)
+nCorr = nCorr + 1
+ensCorr(Bin,Beam) = Longarray(temp + Beam)
+Next Beam
+Select Case nCorr
+Case 0
+AvgCorr(Bin)= 0
+Case 1
+AvgCorr(Bin) = AccumCorr
+Case 2 To 4
+AvgCorr(Bin) = AccumCorr / nCorr
+Case Else
+AvgCorr(Bin) = 0
+EndSelect
+Next Bin
+EndSub
+Sub(RSSIDecode)
+For Bin = 1 To MaxBins
+For Beam = 1 To MaxBeams
+ensRSSI(Bin,Beam) = 0
+Next Beam
+Next Bin
+BinStep = 1
+EnsBin = 0
+RSSIOffset = RSSIOffset + 1
+For Bin = 1 To NumBins
+nRSSI = 0
+AccumRSSI = 0
+AvgRSSIAccum = 0
+AvgRSSIcounter = 0
+temp = RSSIOffset + (4 * EnsBin)
+EnsBin = EnsBin + BinStep
+For Beam = 1 To NumBeams
+AccumRSSI = AccumRSSI + Longarray(temp + Beam)
+nRSSI = nRSSI + 1
+ensRSSI(Bin,Beam) = Longarray(temp + Beam)
+Next Beam
+Select Case nRSSI
+Case 0
+AvgRSSI(Bin)= 0
+Case 1
+AvgRSSI(Bin) = AccumRSSI
+Case 2 To 4
+AvgRSSI(Bin) = AccumRSSI / nRSSI
+Case Else
+AvgRSSI(Bin) = 0
+EndSelect
+Next Bin
+For Bin = AvgRSSIStartBin To AvgRSSIEndBin
+If AvgRSSI(Bin) <> 0 Then
+AvgRSSIAccum = AvgRSSIAccum + AvgRSSI(Bin)
+AvgRSSIcounter = AvgRSSIcounter + 1
+EndIf
+Next Bin
+If (AvgRSSIAccum <> 0) AND (AvgRSSIcounter <> 0) Then
+AvgSwathRSSI = AvgRSSIAccum/AvgRSSIcounter
+Else
+AvgSwathRSSI = BadDataIndicator
+EndIf
+EndSub
+Sub(VMStageDecode)
+If IsCM  = False AND IsVADCP = False Then
+VMpressure = BadDataIndicator
+VMupBeam = BadDataIndicator
+Exit Sub
+EndIf
+VMStageOffset = VMStageOffset - 1
+DepthLSB = 0
+DepthLSB1 = 0
+DepthMSB = 0
+DepthMSB1 = 0
+temp = 0
+TempM = 0
+LSBTemp = 0
+LSB1Temp = 0
+MSBTemp = 0
+MSB1Temp = 0
+DepthLSB = Longarray(VMStageOffset + 3)
+DepthLSB1 = Longarray(VMStageOffset + 4)
+DepthMSB = Longarray(VMStageOffset + 5)
+DepthMSB1 = Longarray(VMStageOffset + 6)
+VMTemp = (16777216 * DepthMSB1) + (65536 * DepthMSB) + (256 * DepthLSB1) + DepthLSB
+If VMTemp <> 0 Then
+TempM = VMTemp/10000
+Else
+TempM = BadDataIndicator
+EndIf
+VMupBeam = TempM
+LSBTemp = Longarray(VMStageOffset + 7)
+LSB1Temp = Longarray(VMStageOffset + 8)
+MSBTemp = Longarray(VMStageOffset + 9)
+MSB1Temp = Longarray(VMStageOffset + 10)
+LSBTemp = Longarray(VMStageOffset + 12)
+LSBTemp = Longarray(VMStageOffset + 13)
+LSB = 0
+L1SB = 0
+MSB = 0
+M1SB = 0
+temp = 0
+TempM = 0
+LSB = Longarray(VMStageOffset + 43)
+L1SB = Longarray(VMStageOffset + 44)
+MSB = Longarray(VMStageOffset + 45)
+M1SB = Longarray(VMStageOffset + 46)
+VMPSTemp = (16777216 * M1SB) + (65536 * MSB) + (256 * L1SB) + LSB
+If VMPSTemp <> 0 Then
+TempM = VMPSTemp/10000
+Else
+TempM = BadDataIndicator
+EndIf
+VMpressure = TempM
+VMupBeam = VMupBeam * Meters_to_Feet
+VMpressure = VMpressure * Meters_to_Feet
+EndSub
+Sub(VelDecode)
+If FlowSign = 0 Then FlowSign = 1
+For Bin = 1 To MaxBins
+For Beam = 1 To MaxBeams
+ensVelocity(Bin,Beam) = NAN
+Next Beam
+V1(Bin) = NAN
+V2(Bin) = NAN
+V3(Bin) = NAN
+V4(Bin) = NAN
+V1Disable(Bin) = False
+V2Disable(Bin) = False
+V3Disable(Bin) = False
+V4disable(Bin) = False
+Next Bin
+BinStep = 1
+EnsBin = 0
+For Bin = 1 To NumBins
+temp = VelOffset + 8 * EnsBin
+EnsBin = EnsBin + BinStep
+For Beam = 1 To NumBeams
+Index = temp + 2 * Beam
+LSB = Longarray(Index)
+MSB = Longarray(Index + 1)
+BinVel = (256 * MSB) + LSB
+If BinVel = 32768 Then
+ensVelocity(Bin, Beam) = NAN
+DebugBinVelOne = BinVel
+Else
+If BinVel > 32767 Then
+BinVel = BinVel - 65536
+DebugBinVelTwo = BinVel
+If BinVel < -32767 Then
+BinVel = NAN
+Else
+BinVel = BinVel * VelocityScaleWater
+BinVel = BinVel * FlowSign
+EndIf
+ensVelocity(Bin,Beam) = BinVel
+Else
+DebugBinVelTwo = BinVel
+If BinVel > 32767 Then
+BinVel = NAN
+Else
+BinVel = BinVel * VelocityScaleWater
+BinVel = BinVel * FlowSign
+EndIf
+ensVelocity(Bin,Beam) = BinVel
+EndIf
+EndIf
+Next Beam
+V1(Bin) = ensVelocity(Bin,1)
+If V1(Bin) = NAN Then V1Disable(Bin) = True
+V2(Bin) = ensVelocity(Bin,2)
+If V2(Bin) = NAN Then V2Disable(Bin) = True
+V3(Bin) = ensVelocity(Bin,3)
+If V3(Bin) = NAN Then V3Disable(Bin) = True
+V4(Bin) = ensVelocity(Bin,4)
+If V4(Bin) = NAN Then V4disable(Bin) = True
+Next Bin
+EndSub
+Sub CalcLastGoodBin
+LastGoodBin = 0
+cntBin = 0
+cntBin2 = 0
+Beam = 0
+Dim P As Long
+For cntBin = 1 To NumBins
+For P = 1 To 4
+TempCorr(P) = 0
+Next P
+For Beam = 1 To NumBeams
+TempCorr(Beam) = ensCorr(cntBin,Beam)
+Next Beam
+StdDevSpa (StdDevCorr(cntBin),4,TempCorr(1))
+Next cntBin
+For cntBin = 3 To NumBins
+Select Case SelectFilter
+Case = 0
+ExitSub
+Case = 1
+If (AvgRSSI(cntBin) > (AvgRSSI(cntBin - 1)) + RSSIThreshold) Then
+LastGoodBin = cntBin - 1
+ExitSub
+ElseIf cntBin = NumBins Then
+For cntBin2 = 3 To NumBins
+If ((AvgCorr(cntBin2) <= (AvgCorr(cntBin2-1)) - CorrThreshold)) OR ((AvgCorr(cntBin2) >= (AvgCorr(cntBin2-1)) + CorrThreshold))  Then
+LastGoodBin = cntBin2 - 1
+ExitSub
+EndIf
+Next
+ElseIf cntBin2 = NumBins Then
+LastGoodBin = cntBin2
+EndIf
+EndSelect
+Next
+EndSub
+Sub LastGoodBinCheck
+TestEns = LastGoodBin
+If RunEnsSpikes = 5 Then EnsLoop = 0
+If EnsLoop < LoopInterval Then
+EnsLoop = EnsLoop + 1
+ElseIf TestEns < (AvgRunEns - 1) OR TestEns > (AvgRunEns + 1) Then
+BadEnsFlag = True
+BadEnsCount = BadEnsCount + 1
+RunEnsSpikes = RunEnsSpikes + 1
+Else
+BadEnsFlag = False
+EndIf
+If BadEnsFlag = False Then AvgRun(AvgRunEns,1,TestEns,15)
+EndSub
+Sub(OneMinuteCalcs)
+Dim TotBins As Long
+Public MidBin As Long
+Public EbbDir As Boolean = true
+V1Cnt = 0
+V1EbbCnt = 0
+V1FldCnt = 0
+V2Cnt = 0
+V2EbbCnt = 0
+V2FldCnt = 0
+V3Cnt = 0
+V4Cnt = 0
+V1Sum = 0
+V1EbbSum = 0
+V1FldSum = 0
+V2Sum = 0
+V2EbbSum = 0
+V2FldSum = 0
+V3Sum = 0
+V4Sum = 0
+iVel = 0
+For i = 1 To 27
+VMBinVel(i) = NAN
+VmBinVelDisable(i) = False
+Next i
+VelCount = 0
+If UseAutoLastBin = True Then
+EndBin = LastGoodBin
+EndIf
+If (BiRatOK = True) AND (BiRating = True) Then
+UseBiRat = True
+Else
+UseBiRat = False
+EndIf
+TotBins = EndBin - StartBin
+MidBin = TotBins/2
+If (V1(MidBin) * FlowSign) > BiRatTran Then
+EbbDir = true
+Else
+EbbDir = false
+EndIf
+For Cnt = StartBin To EndBin
+If (V1(Cnt) <> NAN) AND (V1(Cnt)>= MinExpVel) AND (V1(Cnt)<= MaxExpVel)
+V1Sum = V1Sum + V1(Cnt)
+V1Cnt = V1Cnt + 1
+If UseBiRat = true Then
+If EbbDir Then
+If (Cnt >= StartEbbBin) AND (Cnt <= EndEbbBin) Then
+V1EbbSum += V1(Cnt)
+V1EbbCnt += 1
+EndIf
+Else
+If (Cnt >= StartFldBin) AND (Cnt <= EndFldBin)Then
+V1FldSum += V1(Cnt)
+V1FldCnt += 1
+EndIf
+EndIf
+EndIf
+Else
+BadBinCnt = BadBinCnt + 1
+V1(Cnt) = BadDataIndicator
+EndIf
+Next
+If V1Sum <> 0 Then
+V1AVG = V1Sum/V1Cnt
+Else
+V1AVG = 0
+EndIf
+If V1EbbSum <> 0 Then
+V1EbbAvg = V1EbbSum/V1EbbCnt
+Else
+V1EbbAvg = 0
+EndIf
+If V1FldSum <> 0 Then
+V1FldAvg = V1FldSum/V1FldCnt
+Else
+V1FldAvg = 0
+EndIf
+For Cnt = StartBin To EndBin
+If (V2(Cnt) <> NAN) AND (V2(Cnt)>= MinExpVel) AND (V2(Cnt)<= MaxExpVel)
+V2Sum = V2Sum +  V2(Cnt)
+V2Cnt = V2Cnt + 1
+If UseBiRat = true Then
+If EbbDir Then
+If (Cnt >= StartEbbBin) AND (Cnt <= EndEbbBin) Then
+V2EbbSum += V2(Cnt)
+V2EbbCnt += 1
+EndIf
+Else
+If (Cnt >= StartFldBin) AND (Cnt <= EndFldBin)Then
+V2FldSum += V2(Cnt)
+V2FldCnt += 1
+EndIf
+EndIf
+EndIf
+Else
+BadBinCnt = BadBinCnt + 1
+V2(Cnt) = BadDataIndicator
+EndIf
+Next
+If V2Sum <> 0 Then
+V2AVG =  V2Sum/V2Cnt
+Else
+V2AVG = 0
+EndIf
+If V2EbbSum <> 0 Then
+V2EbbAvg = V2EbbSum/V2EbbCnt
+Else
+V2EbbAvg = 0
+EndIf
+If V2FldSum <> 0 Then
+V2FldAvg = V2FldSum/V2FldCnt
+Else
+V2FldAvg = 0
+EndIf
+For Cnt = StartBin To EndBin
+If (V3(Cnt) <> NAN) AND (V3(Cnt)>= MinExpVel) AND (V3(Cnt)<= MaxExpVel)
+V3Sum = V3Sum +  V3(Cnt)
+V3Cnt = V3Cnt + 1
+Else
+BadBinCnt = BadBinCnt + 1
+V3(Cnt) = BadDataIndicator
+EndIf
+Next
+If V3Sum <> 0 Then
+V3AVG =  V3Sum/V3Cnt
+Else
+V3AVG = 0
+EndIf
+For Cnt = StartBin To EndBin
+If (V4(Cnt) <> NAN) AND (V4(Cnt)>= MinExpVel) AND (V4(Cnt)<= MaxExpVel)
+V4Sum = V4Sum +  V4(Cnt)
+V4Cnt = V4Cnt + 1
+Else
+BadBinCnt = BadBinCnt + 1
+V4(Cnt) = BadDataIndicator
+EndIf
+Next
+If V4Sum <> 0 Then
+V4AVG =  V4Sum/V4Cnt
+Else
+V4AVG = 0
+EndIf
+If UseV2 = yes Then
+If BiRating Then
+If EbbDir Then
+iVel = SQR(V1EbbAvg^2 + V2EbbAvg^2)
+Else
+iVel = SQR(V1FldAvg^2 + V2FldAvg^2)
+EndIf
+Else
+iVel = SQR(V1AVG^2 + V2AVG^2)
+EndIf
+For Cnt = 1 To MaxBins
+If (V1(Cnt)<> BadDataIndicator) AND (V2(Cnt)<> BadDataIndicator) Then
+VMBinVel(Cnt) = SQR (V1(Cnt)^2 + V2(Cnt)^2)
+If ((Cnt >= StartBin) AND (Cnt <= EndBin)) Then
+VelCount = VelCount + 1
+EndIf
+Else
+VMBinVel(Cnt) = BadDataIndicator
+VmBinVelDisable(Cnt) = True
+EndIf
+Next
+ElseIf UseDir = yes Then
+iVel = (V1AVG * SIN(DegToRad * PosFlowDir)) + (V2AVG * COS(DegToRad * PosFlowDir))
+For Cnt = 1 To MaxBins
+If (V1(Cnt)<> BadDataIndicator) AND (V2(Cnt)<> BadDataIndicator) Then
+VMBinVel(Cnt) = (V1 * SIN(DegToRad * PosFlowDir)) + (V2 * COS(DegToRad * PosFlowDir))
+If ((Cnt >= StartBin) AND (Cnt <= EndBin)) Then
+VelCount = VelCount + 1
+EndIf
+Else
+VMBinVel(Cnt) = BadDataIndicator
+VmBinVelDisable(Cnt) = True
+EndIf
+Next
+Else
+If BiRating Then
+If EbbDir Then
+If IsVADCP = yes Then
+iVel = V2EbbAvg
+Else
+iVel = V1EbbAvg
+EndIf
+Else
+If IsVADCP = yes
+iVel = V2FldAvg
+Else
+iVel = V1FldAvg
+EndIf
+EndIf
+Else
+If IsVADCP = yes Then
+iVel = V2AVG
+Else
+iVel = V1AVG
+EndIf
+EndIf
+For Cnt = 1 To MaxBins
+If V1(Cnt) <> BadDataIndicator Then
+If IsVADCP Then
+VMBinVel(Cnt) = V2(Cnt)
+Else
+VMBinVel(Cnt) = V1(Cnt)
+EndIf
+If ((Cnt >= StartBin) AND (Cnt <= EndBin)) Then
+VelCount = VelCount + 1
+EndIf
+Else
+VMBinVel(Cnt) = BadDataIndicator
+VmBinVelDisable(Cnt) = True
+EndIf
+Next
+EndIf
+If VelCount >=  EndBin - StartBin Then
+BadVelFlag = no
+Call VelFilter
+Else
+BadVelFlag = yes
+iVel = BadDataIndicator
+BadVelCount = BadVelCount + 1
+EndIf
+BadBinCount = (((EndBin+1)-StartBin)- VelCount)
+If ((iVel<>BadVel) AND (iVel<LowRatVel)) Then
+LowCount = LowCount + 1
+ElseIf ((iVel<>BadVel) AND (iVel>HighRatVel)) Then
+HighCount = HighCount + 1
+Else
+If HighCount > 0 Then HighCount = HighCount - 1
+If LowCount > 0 Then LowCount = LowCount - 1
+EndIf
+If HighCount > 60 Then HighMeas = true
+If LowCount > 60 Then LowMeas = true
+EndSub
+Sub ResetMeasFlags
+If HighRatVel <> InitialHRV Then
+InitialHRV = HighRatVel
+HighMeas = False
+HighCount = 0
+EndIf
+If LowRatVel <> InitialLRV Then
+InitialLRV = LowRatVel
+LowMeas = False
+LowCount = 0
+EndIf
+EndSub
+Sub VelFilter
+If iVel <> 0 OR BadDataIndicator Then
+If (iVel >= MinExpVel) AND (iVel <= MaxExpVel) Then
+BadVelFlag = False
+Else
+BadVelFlag = yes
+BadVelCount = BadVelCount + 1
+iVel = BadDataIndicator
+ExitSub
+EndIf
+Else
+DataErr = DataErr + 1
+BadVelFlag = yes
+BadVelCount = BadVelCount + 1
+iVel = BadDataIndicator
+ExitSub
+EndIf
+EndSub
+Sub SubCalcQ
+If CalcQ = yes Then
+If Trans = BadDataIndicator Then
+aVel = rVel0 + (rVel1 * iVel) + (rVel2 * iVel^2) + (rVel3 * iVel^3)
+Else
+If iVel >= Trans Then
+aVel = UpVel0 + (UpVel1 * iVel) + (UpVel2 * iVel^2) + (UpVel3 * iVel^3)
+ElseIf iVel <= Trans Then
+aVel = LowVel0 + (LowVel1 * iVel) + (LowVel2 * iVel^2) + (LowVel3 * iVel^3)
+EndIf
+EndIf
+If BadVelFlag = False AND  BadStgFlag = False Then
+BadQFlag = False
+Area = rStg0 + (rStg1*Stage1) + (rStg2 * Stage1^2)
+Q = Area * aVel
+If Q = 0 Then
+BadQFlag = True
+BadQCount = BadQCount + 1
+Q = BadDataIndicator
+EndIf
+Else
+BadQFlag = True
+BadQCount = BadQCount + 1
+Q = BadDataIndicator
+EndIf
+Else
+BadQCount = 0
+Area = NAN
+aVel = NAN
+Q = 0
+BadQFlag = True
+EndIf
+EndSub
+Sub ZeroVMArrays
+For v = 1 To 1500
+Longarray(v) = 0
+Next v
+For Bin = 1 To MaxBins
+For Beam = 1 To MaxBeams
+ensVelocity(Bin,Beam) = Nan
+Next Beam
+Next Bin
+For v = 1 To MaxBins
+V1(v) = Nan
+V2(v) = Nan
+VMBinVel(v) = Nan
+Next v
+iVel = NaN
+For Bin = 1 To MaxBins
+For Beam = 1 To MaxBeams
+ensCorr(Bin,Beam) = 0
+Next Beam
+AvgCorr(Bin) = 0
+Next Bin
+For Bin = 1 To MaxBins
+For Beam = 1 To MaxBeams
+ensRSSI(Bin,Beam) = 0
+Next Beam
+AvgRSSI(Bin) = 0
+Next Bin
+EndSub
+Sub ChecksumCheck
+LSB = Longarray(3)
+MSB = Longarray(4)
+EnsembleLen = LSB + (MSB*256)
+CalcCheckSum = 0
+k = 0
+For k = 1 To EnsembleLen
+CalcCheckSum = CalcCheckSum + Longarray(k)
+Next k
+CalcCheckSum = 65535 AND CalcCheckSum
+EnsChecksum = Longarray(k)
+TempL = Longarray(k + 1)
+EnsChecksum = EnsChecksum + TempL * 256
+EndSub
+Sub ZeroErrCounters
+BadBinCnt = 0
+BadEnsemble = 0
+BadEnsCount = 0
+RestartAttempts = 0
+BadStgCount = 0
+YsiErrCount = 0
+BadQCount = 0
+BadVelCount = 0
+EventVoltFlag  = no
+EventYSIFlag  = no
+EventQFlag  = no
+EventCDMAFlag = no
+CDMAFailure = no
+NewADCP = False
+NewPS1 = False
+NewPS2 = False
+EndSub
+Sub KeypadMenu
+DisplayMenu ("Main Menu",-4)
+SubMenu ("SystemInfo")
+DisplayValue ("LastScan",LastScan)
+DisplayValue ("Program",Program)
+DisplayValue ("ProgVersDate",ProgVersDate)
+DisplayValue ("DL_Firm",OSVers)
+DisplayValue ("SerNum",SerNum)
+DisplayValue ("ProgErrors",ProgErrors)
+DisplayValue ("DataErr",DataErr)
+DisplayValue ("Low12Volts",Low12Volts)
+DisplayValue ("LithBat",LithBat)
+DisplayValue ("SkipScans",SkipScans)
+DisplayValue ("FreeCFMem",FreeCFMem)
+DisplayValue ("Restart Attemps",RestartAttempts)
+DisplayValue ("NeedLowMeas",LowMeas)
+DisplayValue ("NeedHighMeas",HighMeas)
+EndSubMenu
+SubMenu ("VM Data")
+DisplayValue ("LastScan",LastScan)
+DisplayValue ("Stage1",Stage1)
+DisplayValue ("Stage2",Stage2)
+DisplayValue ("StgDiff",StgDiff)
+DisplayValue ("UpbeamStg",UpBeamStg)
+DisplayValue ("VMPressStg",VMPressStg)
+DisplayValue ("PS1Stg",PS1Stg)
+DisplayValue ("PS2Stg",PS2Stg)
+DisplayValue ("YsiStg",YsiStg)
+DisplayValue ("iVel",iVel)
+DisplayValue ("BadQCount",BadQCount)
+DisplayValue ("Q",Q)
+DisplayValue ("SiteVolts",CR1Volts)
+DisplayValue ("VMvolts",VMVolts)
+DisplayValue ("ExtPwrVolt",ExtPwrVolt)
+DisplayValue ("VMpitch",VMpitch)
+DisplayValue ("VMroll",VMroll)
+DisplayValue ("VMtempC",VMtempC)
+DisplayValue ("LastGoodBin",LastGoodBin)
+DisplayValue ("BadVelCount",BadVelCount)
+DisplayValue ("BadStgCount",BadStgCount)
+DisplayValue ("StgSelect",StgSelect)
+DisplayValue ("VMUpBeam",VMupBeam)
+DisplayValue ("VMPressure",VMpressure)
+DisplayValue ("AvgSwathRSSI",AvgSwathRSSI)
+DisplayValue ("VMMemFree",VMMemFree)
+EndSubMenu
+SubMenu ("OtherSensorData")
+DisplayValue ("LastScan",LastScan)
+DisplayValue ("YsiDepth=",YsiDepth)
+DisplayValue ("YsiVolts",YsiVolts)
+DisplayValue ("YsiTempC",YsiTempC)
+DisplayValue ("YsiSpCond",YsiSpCond)
+DisplayValue ("YsiTurbFNU",YsiTurbFNU)
+DisplayValue ("YsiChlorMGL",YsiChlorMGL)
+DisplayValue ("YsiChlorRFU",YsiChlorRFU)
+DisplayValue ("YsiPH",YsiPH)
+DisplayValue ("YsiDOmgL",YsiDOmgL)
+DisplayValue ("YsiDOSat",YsiDOSat)
+DisplayValue ("YsipH",YsiPH)
+DisplayValue ("YsiORP",YsiORP)
+DisplayValue ("YsiBGA",YsiBGA)
+DisplayValue ("YsiFdomRFU",YsiFdomRFU)
+DisplayValue ("YsiFdomQSU",YsiFdomQSU)
+DisplayValue ("YsiAmmon",YsiAmmonium)
+DisplayValue ("YsiNitrate",YsiNitrate)
+DisplayValue ("YsiChloride",YsiChloride)
+DisplayValue ("PSPressure",PSPressure(1))
+EndSubMenu
+SubMenu ("SiteParameters")
+DisplayValue ("LastScan",LastScan)
+MenuItem ("Site Id",SiteID)
+MenuItem ("SiteNumb",SiteNum)
+MenuItem ("Tech?",Tech)
+MenuItem ("VisitReason",VisitReason)
+MenuPick (Site Visit,Calib Meas,Site Down,Beam Block,WQ Fouling,Program Update,Hardware Update,Other)
+MenuItem ("RecCalibData?",RecCalibData)
+MenuPick (yes,no)
+MenuItem ("UpBeamOffSet",UpBeamOffset)
+MenuItem ("VMPressOffset",VMPressOffset)
+MenuItem ("PS1Offset",PS1Offset)
+MenuItem ("PS2Offset",PS2Offset)
+MenuItem ("YsiOffset",YsiOffset)
+MenuItem ("DiveVisit?",DiveVisit)
+MenuPick (yes,no)
+DisplayValue ("DaysSinceDive",DaysSinceDive)
+MenuItem ("SelStgUsed =",SelStgUsed)
+MenuItem ("SelStg2 =",SelStg2)
+MenuPick (UPbeam,VMpress,PSpress,PSpress2,YSIpress)
+MenuItem ("StartBin",StartBin)
+MenuItem ("EndBin",EndBin)
+MenuItem ("StartEbbBin (Pos)",StartEbbBin)
+MenuItem ("EndEbbBin (Pos)",EndEbbBin)
+MenuItem ("StartFldBin (Neg)",StartFldBin)
+MenuItem ("EndFldBin (Neg)",EndFldBin)
+MenuItem ("Use Ebb/Fld Rating",BiRating)
+MenuPick (yes,no)
+MenuItem ("Ebb-Flood Tran (vel)",BiRatTran)
+MenuItem ("MinExpVel",MinExpVel)
+MenuItem ("MaxExpVel",MaxExpVel)
+MenuItem ("MinExpStg",MinExpStg)
+MenuItem ("MaxExpStg",MaxExpStg)
+MenuItem ("Flow Sign",FlowSign)
+MenuPick (1,-1)
+MenuItem ("HighRatVel",HighRatVel)
+MenuItem ("LowRatVel",LowRatVel)
+MenuItem ("CalcQs?",CalcQ)
+MenuPick (yes,no)
+MenuItem ("Use Y vel?",UseV2)
+MenuPick (yes,no)
+MenuItem ("Use Pos flow angle (earth)",UseDir)
+MenuPick (yes,no)
+MenuItem ("Positive Flow Angle",PosFlowDir)
+MenuItem ("Record All Vel Data",RecordAll)
+MenuPick (yes,no)
+MenuItem ("VM Power",VMPower)
+MenuPick (yes,no)
+MenuItem ("WakeUpVM",WakeUpVM)
+MenuPick (yes,no)
+MenuItem ("HrsCdmaOff",HrsCdmaOff)
+MenuPick (1,2,4,8,12)
+MenuItem ("CycleCdmaPwr",CycleCdmaPwr)
+MenuPick (yes,no)
+MenuItem ("KeepCDMAon",KeepCDMAon)
+MenuPick (yes,no)
+MenuItem ("UseNCcdmaRelay?",IsNClosed)
+MenuPick (yes,no)
+MenuItem ("UseAutoLastBin",UseAutoLastBin)
+MenuPick (yes,no)
+MenuItem ("SelectFilter",SelectFilter)
+MenuPick (0,1)
+MenuItem ("RSSIThreshold",RSSIThreshold)
+MenuItem ("RSSI Avg Start Bin",AvgRSSIStartBin)
+MenuItem ("RSSI Avg End Bin",AvgRSSIEndBin)
+MenuItem ("StdCorrThreshold",StdCorrThreshold)
+MenuItem ("CorrThreshold",CorrThreshold)
+MenuItem ("SendPT3",SendPT3)
+MenuPick (yes,no)
+EndSubMenu
+SubMenu ("AllBinData")
+DisplayValue ("Bin1",VMBinVel(1))
+DisplayValue ("Bin2",VMBinVel(2))
+DisplayValue ("Bin3",VMBinVel(3))
+DisplayValue ("Bin4",VMBinVel(4))
+DisplayValue ("Bin5",VMBinVel(5))
+DisplayValue ("Bin6",VMBinVel(6))
+DisplayValue ("Bin7",VMBinVel(7))
+DisplayValue ("Bin8",VMBinVel(8))
+DisplayValue ("Bin9",VMBinVel(9))
+DisplayValue ("Bin10",VMBinVel(10))
+DisplayValue ("Bin11",VMBinVel(11))
+DisplayValue ("Bin12",VMBinVel(12))
+DisplayValue ("Bin13",VMBinVel(13))
+DisplayValue ("Bin14",VMBinVel(14))
+DisplayValue ("Bin15",VMBinVel(15))
+DisplayValue ("Bin16",VMBinVel(16))
+DisplayValue ("Bin17",VMBinVel(17))
+DisplayValue ("Bin18",VMBinVel(18))
+DisplayValue ("Bin19",VMBinVel(19))
+DisplayValue ("Bin20",VMBinVel(20))
+DisplayValue ("Bin21",VMBinVel(21))
+DisplayValue ("Bin22",VMBinVel(22))
+DisplayValue ("Bin23",VMBinVel(23))
+DisplayValue ("Bin24",VMBinVel(24))
+DisplayValue ("Bin25",VMBinVel(25))
+DisplayValue ("Bin26",VMBinVel(26))
+DisplayValue ("Bin27",VMBinVel(27))
+EndSubMenu
+SubMenu ("RawYsiData")
+DisplayValue ("YsiSensor(1)",YsiSensor(1))
+DisplayValue ("YsiSensor(2)",YsiSensor(2))
+DisplayValue ("YsiSensor(3)",YsiSensor(3))
+DisplayValue ("YsiSensor(4)",YsiSensor(4))
+DisplayValue ("YsiSensor(5)",YsiSensor(5))
+DisplayValue ("YsiSensor(6)",YsiSensor(6))
+DisplayValue ("YsiSensor(7)",YsiSensor(7))
+DisplayValue ("YsiSensor(8)",YsiSensor(8))
+DisplayValue ("YsiSensor(9)",YsiSensor(9))
+DisplayValue ("YsiSensor(10)",YsiSensor(10))
+DisplayValue ("YsiSensor(11)",YsiSensor(11))
+DisplayValue ("YsiSensor(12)",YsiSensor(12))
+DisplayValue ("YsiSensor(13)",YsiSensor(13))
+DisplayValue ("YsiSensor(14)",YsiSensor(14))
+DisplayValue ("YsiSensor(15)",YsiSensor(15))
+DisplayValue ("YsiSensor(16)",YsiSensor(16))
+DisplayValue ("YsiSensor(17)",YsiSensor(17))
+DisplayValue ("YsiSensor(18)",YsiSensor(18))
+DisplayValue ("YsiSensor(19)",YsiSensor(19))
+DisplayValue ("YsiSensor(20)",YsiSensor(20))
+DisplayValue ("YsiSensor(21)",YsiSensor(21))
+EndSubMenu
+SubMenu ("StageRating")
+MenuItem ("rStg0",rStg2)
+MenuItem ("rStg1",rStg1)
+MenuItem ("rStg2",rStg0)
+EndSubMenu
+SubMenu ("aVel_Rating")
+MenuItem ("rVel0",rVel3)
+MenuItem ("rVel1",rVel2)
+MenuItem ("rVel2",rVel1)
+MenuItem ("rVel3",rVel0)
+MenuItem ("Trans",Trans)
+MenuItem ("UpVel0",UpVel3)
+MenuItem ("UpVel1",UpVel2)
+MenuItem ("UpVel2",UpVel1)
+MenuItem ("UpVel3",UpVel0)
+MenuItem ("LowVel0",LowVel3)
+MenuItem ("LowVel1",LowVel2)
+MenuItem ("LowVel2",LowVel1)
+MenuItem ("LowVel3",LowVel0)
+EndSubMenu
+SubMenu ("SDI12_Setup")
+MenuItem ("PSPressPort",PSPressPort)
+MenuPick (3,5)
+MenuItem ("PSPressAddr",PSPressAddr)
+MenuPick (0,1,2,3,4)
+MenuItem ("PSpress2Port?",PSpress2Port)
+MenuPick (3,5)
+MenuItem ("PSpress2Addr?",PSpress2Addr)
+MenuPick (0,1,2,3,4)
+MenuItem ("YSI Port?",YsiPort)
+MenuPick (3,5)
+MenuItem ("YSI Addr?",YsiAddr)
+MenuPick (0,1,2,3,4)
+EndSubMenu
+SubMenu ("YsiSondeSetup")
+MenuItem ("YSI Sonde?",YsiSonde)
+MenuPick (yes,no)
+MenuItem ("MilliToMicro?",MilliToMicro)
+MenuPick (yes,no)
+MenuItem ("LocTempC",LocTempC)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocSpCond",LocSpCond)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocVolts",LocVolts)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocDOmgL",LocDOmgL)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocDOSat",LocDOSat)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocPH",LocPH)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocORP",LocORP)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocDepth",LocDepth)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocTurbFNU",LocTurbFNU)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocFdomRFU",LocFdomRFU)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocFdomQSU",LocFdomQSU)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocChlorMGL",LocChlorMGL)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocChlorRFU",LocChlorRFU)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocBGA",LocBGA)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocAmmonium",LocAmmonium)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocNitrate",LocNitrate)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+MenuItem ("LocChloride",LocChloride)
+MenuPick (1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21)
+EndSubMenu
+EndMenu
+EndSub
+BeginProg
+PanelTemp(PTempC,250)
+PTempF = PTempC * 9/5 + 32
+Call GetStartup
+Call CalcLoopInterval
+Call Initialize
+RecDataFlag = no
+CMD = ""
+SendCMD = FALSE
+Scan (ScanRate,ScanUnit,5,0)
+ScanNo = ScanNo + 1
+If BaudRateHi = True Then
+SerialOpen (AdcpPort,38400,3,0,2000)
+Else
+SerialOpen (AdcpPort,9600,3,0,2000)
+EndIf
+If (VemcoRTR = True) OR (SendFlowData = True) Then
+SerialOpen (SlaveCom,19200,0,0,2000)
+EndIf
+If (SendCMD) Then Call SendSetup
+If SendPT3 = True AND TimeIntoInterval(PT3Time,1440,Min) Then
+CMD = "PT3"
+SendCMD = True
+Call SendSetup
+EndIf
+If CMD = "PT3" Then CallTable NoiseFloor
+CMD = ""
+If SendFlowData = True Then Call SerialDataOut
+Call ToggleVMPower
+Call TrueStage
+UpBeamStg = VMupBeam + UpBeamOffset
+VMPressStg = VMpressure + VMPressOffset
+PS1Stg = PSPressure(1) + PS1Offset
+PS2Stg = PSpress2Stg(1) + PS2Offset
+YsiStg = YsiDepth + YsiOffset
+Call GetStage
+RealTime (rTime)
+RealSeconds = (Hour * 3600) + (Minute * 60) + Second
+Mod5Minutes = RealSeconds MOD 300
+Mod15Minutes = RealSeconds MOD 900
+Mod60Minutes = RealSeconds MOD 3600
+ModDay = RealSeconds MOD 86400
+If Mod15Minutes < 85 Then
+RunEnsSpikes = 0
+EndIf
+If (ModDay > 300) AND (ModDay < 420) Then
+Call ZeroErrCounters
+EndIf
+Numbytes = 0
+i=0
+If WakeUpVM Then
+Call WakeVM
+WakeUpVM = no
+EndIf
+Call GetLastScan
+Call GetSysInfo
+Call GetYsiSonde
+Call KeypadMenu
+Call ExtPwrSource
+If Tech <> "" OR VisitReason <> "" OR TrueUpBeamStg <> NAN OR TrueVMPressStg <> NAN OR TruePS1Stg <> NAN OR TruePS2Stg <> NAN OR TrueYsiStg <> NAN OR DiveVisit = True Then
+ErrorEvent = "Tech Visit"
+CallTable SiteVisit
+Call Visits
+Delay (0,200,mSec)
+Tech = ""
+VisitReason = ""
+TrueUpBeamStg = BadDataIndicator
+TrueVMPressStg = BadDataIndicator
+TruePS1Stg = BadDataIndicator
+TruePS2Stg = BadDataIndicator
+TrueYsiStg = BadDataIndicator
+DiveVisit = False
+EndIf
+If ModDay < 15 Then
+Rec24HrFlag = yes
+CallTable QAQCInfo
+Else
+Rec24HrFlag = no
+EndIf
+If Mod15Minutes < 15 Then
+If RecordAll = yes Then RecAllVelFlag = yes
+Rec15minFlag = yes
+RecDataFlag = yes
+RecBeamCheckFlag = yes
+Else
+Rec15minFlag = no
+RecAllVelFlag = no
+RecBeamCheckFlag = no
+EndIf
+If (Mod15Minutes < 35) AND (RecDataFlag = no) Then
+Rec15minFlag = yes
+If RecordAll = yes Then RecAllVelFlag = yes
+RecDataFlag = no
+EndIf
+If Mod15Minutes > 35 Then RecDataFlag = no
+If RecCalibData = True Then
+Rec1MinFlag = True
+EndIf
+If Rec1MinFlag = True Then
+OneMinCount = OneMinCount + 1
+If OneMinCount > 1439 Then
+RecCalibData = False
+Rec1MinFlag = False
+OneMinCount = 0
+EndIf
+EndIf
+CallTable BeamCheck
+CallTable DataOut
+CallTable Data1m
+CallTable VelData
+RecAllVelFlag = false
+Rec15minFlag = false
+SubScan (10,Sec,3)
+Do While SerialInChk(AdcpPort)
+i=i+1
+SerialInBlock(AdcpPort,Nums(1),1)
+MoveBytes(Longarray(i),3,Nums(1),0,1)
+If i = 2 Then
+If Longarray(1) <> 127 OR Longarray(2) <> 127
+FramingError = FramingError + 1
+i = i-2
+EndIf
+EndIf
+If i >=2200 Then ExitDo
+Numbytes = i
+Loop
+If FramingError > 0 Then
+HeaderMismatch = HeaderMismatch + 1
+FramingError = 0
+EndIf
+Next SubScan
+Call CDMAcheck
+If NumbytesZero > 7 Then
+BadEnsemble = BadEnsemble + 1
+Call ZeroVMArrays
+VMdataIn = no
+SerialFlush(AdcpPort)
+WakeUpVM = yes
+NumbytesZero = 0
+EndIf
+If Numbytes < 1 Then
+NumbytesZero = NumbytesZero + 1
+Else
+NumbytesZero = 0
+EndIf
+ReceivedBytes = Numbytes
+i=0
+Counter=1
+Call ChecksumCheck
+If (CalcCheckSum <> EnsChecksum) OR (CalcCheckSum = 0) Then
+BadEnsemble = BadEnsemble + 1
+BadChecksum = BadChecksum + 1
+SerialFlush(AdcpPort)
+VMdataIn = no
+Else
+VMdataIn = yes
+EndIf
+If VMdataIn = yes Then
+SerialFlush (AdcpPort)
+Call MainDecode
+TempDiff = YsiTempC - VMtempC
+Call CalcLastGoodBin
+Call LastGoodBinCheck
+Call OneMinuteCalcs
+Call SubCalcQ
+Call GetVMFreeMem
+EndIf
+Call StageDiff
+Call ResetMeasFlags
+Call GetSN
+NextScan
+EndProg

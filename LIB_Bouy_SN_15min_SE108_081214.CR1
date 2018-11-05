@@ -1,0 +1,642 @@
+'This is a Scott Nagel revision for TOE to run on 15 min interval (from the old SN running at LIB)
+
+'CR1000 SeriesDatalogger
+'date:10-01-11
+'program author:John Franco Saraceno
+'X2 Continous Monitroning Program Test CR1000 Program
+'Sac RIver at Decker Island in the northern Delta
+'MUST UPDATE s/N and cal coeffs
+'Problem- YSI data flatlined on ca 2/27/13
+'So Manually talked usuing the termonal emuilator, turned on YSI manually AND it kick started the unit whihc had 3.2V internal!
+'Got it going at 1830
+'Its ok at 1845
+'--------------------------------Revision History----------------------------------------
+'
+'v01 ' based on Olmstead Program
+'05 runiing until YSI EXO flatlined data on 2-21-13
+'06 started too keep YSI powered always.Added some units to the FDOM stream, added NANs to ysi vars so that the dont report stuck values; clear the CR1000 SDI 12 YSIEXO2 buffer
+'v10 - sent 6/10/13 1420changed some file structures, station name to conform with new data org schema
+'v10 b - sent 7/9/13-ravenAlways on true by default,changed fan time from 10 to 30 min
+'052914-SE108 code swapped out (was For liberty cut)
+'------------------------------Instrument Wiring----------------------------------------
+'Instrument Wiring
+'Note: See block and wiring diagrams
+
+StationName LIB'decker island, Hydro calls the station DEC
+
+SequentialMode'dont want pipeline mode!
+'_________________________________PROGRAM VARIABLES__________________________________________________
+'Datalogger variables
+Public PTemp, DL_Volts,i,j,k,TimeZone As String,RH,TC_Diff
+Public RapidScanCnt,RapidScanBurstCnt
+Public RavenAlwaysOn As Boolean,
+Units PTemp = degC
+Const LowBattLevel = 11 'Volts to turn off sensors
+
+Units DL_Volts = Volts
+Public LeakAlarm As Boolean,LowVoltAlarm As Boolean
+Public wipe As Boolean
+'HIH-4030/31 Series Relative Humidity meter
+Public RHtrue
+'Const RHThreshold=2000 'in mV,Somewhat sensor/system/dessicant dependent -Arbitrary- open can was >2100 mV, will have to wait and see.
+Const RHThreshold=75 '% 'v3
+'VOUT=(VSUPPLY)(0.0062(sensor RH) + 0.16), typical at 25 ºC
+'-->Sensor RH=(Vout*0.0062)/(Vsupply-0.016)
+'True RH = (Sensor RH)/(1.0546 – 0.00216T), T in ºC
+
+Const RHmult =.0307
+Const RHoff = 958 '(mv)
+Units RH = %
+
+'Timing constants
+Const RelayTime=1 'Momentary on delay  in seconds for Relay -also affects any item on Relay port three- See sub SSR
+Const SampleClk=500'measurement delay period in milliseconds-> 1/SampleClk= burst frequency, e.g if SampleClk= 500, then sample rate 2Hz (1/500 ms)
+Const n=30 'number of times to sample sensor at burst frequency for FDOM
+Const burst_ave=20' # of Samples (=2Xsec)to include in burst saveraging of analog measurements
+Const Sensor_warmup = 30 'Warmup for all sensors
+Const FDOM_warmup = 15 'Warmup delay in seconds
+Const WiperDelay90 = 15 'sec test this
+
+Const ResetWiperDelay = 10
+
+'Const FDOM_GnSwtchDly = 10 'Delay for outpuot to stabilize after gain switching
+Const MainInterval =15 'min
+
+'Latching Relay board
+Public junk(10)'relay return
+Const LR4Port = 7
+Const LR4Address = 3
+'
+'Relay
+Public CD16_Output As Long
+
+'YSI
+
+'Port assignments
+'assumes EXO2:
+'SOA-DCP on YSIEXO2-12 Port 7
+'deployed running template file: basicOptics.dep
+
+Const YSIEXO2Port= 7 ' Control Port 7
+Const YSIEXO2Address= 0 '
+
+Public YSIEXO2 (14)
+Alias YSIEXO2(1) = EXODate1
+Alias YSIEXO2(2) = EXOTime1
+Alias YSIEXO2(3) = EXOWtemp
+Alias YSIEXO2(4) = EXOSpCond
+Alias YSIEXO2(5) = EXOpH
+Alias YSIEXO2(6) = EXOFDOM
+Alias YSIEXO2(7) = EXOTurbidity
+Alias YSIEXO2(8) = EXOCHLa
+Alias YSIEXO2(9) = EXOBGA_PC
+Alias YSIEXO2(10) = EXOODOsat
+Alias YSIEXO2(11) = EXOODOmgL
+Alias YSIEXO2(12) = EXODepth
+Alias YSIEXO2(13) = EXOCableBatteryV
+Alias YSIEXO2(14) = EXOBatteryV
+
+'FDOM C7 sensor variables
+Public FDOMflag As Boolean
+Public FDOMsoftFlag As Boolean
+Public BadFDOMcnt,BadFDOMcntBurst,FDOMBurstflag
+
+'Public FDOM_PPB
+'Const a0=0 'Sensor scaling factor:
+'Const a1=4' FDOM sensor scaling factor multiplier to PPB QSE
+'
+'Units FDOM_PPB=PPB QSE
+
+Units EXOFDOM = PPBQS
+Units EXODepth = feet
+Units EXOCableBatteryV = Volts
+Units EXOBatteryV = Volts
+Units EXOSpCond = uS/cm
+Units EXOWtemp = Deg C
+Units EXOBatteryV = Volts
+Units  EXOBGA_PC,EXOCHLa = RFU'checlk this
+
+'SUNA poll
+Const SUNASampleClk=1200'measurement delay period in milliseconds-> 1/SampleClk= burst frequency, e.g if SampleClk= 500, then sample rate 2Hz (1/500 ms)
+'1500 works best for SUNA
+Const SUNA_warmup=15'here its 30 seconds for the SUNA,sample time to wipe
+Const no3_offset=0
+
+Public PolledMode As Boolean,DL_Volts_SUNA_On
+Public SInString(241)
+Public SUNAInString As String * 1500
+Public NBytesReturned,SunaVec(n,241)
+Public SunaFittingResult(n),SUNASerialNumber
+Public SunaSampleTime(n),SunaNitrateuM(n),SunaNitratemgL_med,SunaNitratemgL_ave,SunaNitrateuM_ave,SunaNitrateuM_std,SunaNitrateuM_med,SunaNitratemgL_std
+Public SunaFittingResult_ave,SunaFittingResult_std,SunaFittingResult_med
+Public SunaNitrateuM_sort(burst_ave)
+
+Public avgA254,avgSunaDarkAve,avgSunaSpecAve,avgTspec,avgTlamp,avgSunaHumid,avgSunaLampTime
+'maxTspec(2),maxTlamp(2),maxSunaHumid(2),maxSunaLampTime(2)
+Public SunaVoltMain(n),SunaVoltLamp(n)
+Public minSunaVoltMain(2),minSunaVoltLamp(2),minSunaVoltSupply(2)
+Public AvgSunaVoltMain,avgSunaVoltLamp,AvgSunaVoltSupply
+Public SUNAflag As Boolean,SUNAsoftFlag As Boolean, BadSunaCnt
+Public SUNA_mean2med,SUNA_CV
+Public SunaNitrateuM_ave_Q,SunaNitrateuM_med_Q,SunaNitratemgL_med_Q,SunaNitratemgL_ave_Q,SunaNitrateuM_std_Q
+
+Dim SunaFittingResult_sort(burst_ave),SunaSN(n),SunaLampTime(n),SunaNitratemgL(n)
+Dim SunaHumid(n),SunaDarkAve(n),SunaSpecAve(n),A254(n),Tlamp(n),Tspec(n)
+
+Public SUNA_CV_LOW,SUNA_CV_HIGH,SUNA_LOW_HARD,SUNA_LOW_SOFT,SUNA_HIGH_SOFT,SUNA_HIGH_HARD,SUNA_FIT_HIGH
+
+''YSI SDI-12 Variables
+''YSI must be on address #
+'Public YSI(10)
+'Public WTemp,SpCond,pH,pH_mV,DO_sat,DO_mgL,Phycoidity,BV_YSI
+'Public YSIflag As Boolean,BadYSICnt
+'
+''YSI units for data tables
+'Units WTemp = degC
+'Units SpCond = uS/cm
+'Units pH_mV = mV
+'Units DO_sat = %
+'Units DO_mgL = mg/L
+'Units Turbidity = NTU
+'Units BV_YSI= Volts
+Public SDI(14),SDI2(7),DCPbatteryVolt
+Const SUNAsdiAddress=0'0 =default
+Const SUNAsdiPort = 7'default SDI port, C7
+Alias SDI(1) = Nitrate_uM
+Alias SDI(2) = Nitrate_mgL
+Alias SDI(3) = specAve
+Alias SDI(4) = darkAve
+
+Alias SDI2(1) = LampTemp
+Alias SDI2(2) = SpecTemp
+Alias SDI2(3) = LampTime
+Alias SDI2(4) = SUNA_RH
+Alias SDI2(5) = Voltage_lamp
+Alias SDI2(6) = Voltage_reg
+Alias SDI2(7) = Voltege_supply
+
+'Relay Variables
+
+'_________________________________________DATA TABLES_______________________________________________
+
+'15 min data Table containing
+'This data table will be used for decoded the column number is for decoding references
+'when new data is added to table append to the end of data table
+DataTable (Data_15min_Orig,1,-1) 'raw data, no qa qc on no3 applied.
+  DataInterval (0,MainInterval,min,10)                'column number
+  '  TableFile ("USB:FlashTablename",8,-1,0,60,Min,0,0)
+  Minimum (1,DL_Volts,FP2,0,false)        '1
+  Maximum (1,PTemp,FP2,0,false)           '2
+
+  'YSI
+  Sample (1,EXOWtemp,IEEE4)               '11
+  Sample (1,EXOSpCond,IEEE4)           '10
+  Sample (1,EXOpH,IEEE4)           '8
+
+  Sample (1,EXOFDOM,IEEE4)            '5
+  Sample (1,EXOTurbidity,IEEE4)            '7
+  Sample (1,EXOCHLa,FP2)               '11
+  Sample (1,EXOBGA_PC,IEEE4)           '10
+  Sample (1,EXOODOmgL,IEEE4)           '9
+  Sample (1,EXOODOsat,IEEE4)            '6
+
+  'SUNA
+
+  Sample (1,SunaNitrateuM_ave,IEEE4)      '22   :end of DECODES for ADAPS as of 4/1/2011
+  Sample (1,SunaNitrateuM_std,IEEE4)      '24
+  Sample (1,SunaNitrateuM_med,FP2)      '23
+
+  Sample (1,SunaNitratemgL_ave,IEEE4)      '22   :end of DECODES for ADAPS as of 4/1/2011
+  Sample (1,SunaNitratemgL_med,IEEE4)
+
+  '    Sample (1,SUNA_volt(n),FP2)  '25
+  '    Sample (1,SUNA_volt_med,FP2)  '26
+  '    Sample (1,SUNA_volt_ave,FP2)  '25
+  '    Sample (1,SUNA_volt_std,FP2)  '27
+
+  Sample (1,SunaFittingResult_ave,IEEE4)  '28
+  Sample (1,SunaFittingResult_std,IEEE4)  '29
+  Sample (1,SunaFittingResult_med,IEEE4)  '30
+
+  Sample (1,A254(n),IEEE4) '31
+  Sample (1,SunaDarkAve(n),IEEE4)  '32
+  Sample (1,SunaSpecAve(n),IEEE4)  '33
+  Sample (1,avgTspec,FP2)  '34
+  Sample (1,avgTlamp,FP2)  '35
+  Sample (1,avgSunaHumid,FP2)  '36
+  Sample (1,avgSunaLampTime,IEEE4)  '37
+  'OTHER
+
+  Sample (1,SunaVoltMain(10),IEEE4)
+  Sample (1,SunaVoltLamp(10),IEEE4)
+  Sample (1,EXODate1,IEEE4)
+  Sample (1,EXOTime1,IEEE4)
+  Sample (1,EXODepth,IEEE4)
+  Sample (1,EXOCableBatteryV,IEEE4)
+  Sample (1,EXOBatteryV,IEEE4)
+
+EndTable
+'Passed data to hit NWIS
+'Original data
+
+DataTable (Data_15min,1,-1)
+  DataInterval (0,MainInterval,min,10)                'column number
+  '  TableFile ("USB:FlashTablename",8,-1,0,60,Min,0,0)
+  Minimum (1,DL_Volts,FP2,0,false)        '3
+  Maximum (1,PTemp,FP2,0,false)           '2
+
+  Sample (1,EXOWtemp,IEEE4)               '11
+  Sample (1,EXOSpCond,IEEE4)           '10
+  Sample (1,EXOpH,IEEE4)           '8
+
+  Sample (1,EXOFDOM,IEEE4)            '5
+  Sample (1,EXOTurbidity,IEEE4)            '7
+  Sample (1,EXOCHLa,IEEE4)               '11
+  Sample (1,EXOBGA_PC,IEEE4)           '10
+  Sample (1,EXOODOmgL,IEEE4)           '9
+  Sample (1,EXOODOsat,IEEE4)            '6
+  'SUNA
+
+  Sample (1,SunaNitrateuM_ave_Q,FP2)      '22   :end of DECODES for ADAPS as of 4/1/2011
+  Sample (1,SunaNitrateuM_std_Q,FP2)      '24
+  Sample (1,SunaNitrateuM_med_Q,FP2)      '23
+
+  Sample (1,SunaNitratemgL_ave_Q,FP2)      '22   :end of DECODES for ADAPS as of 4/1/2011
+  Sample (1,SunaNitratemgL_med_Q,FP2)
+
+  Sample (1,SunaFittingResult_ave,IEEE4)  '28
+  Sample (1,SunaFittingResult_std,IEEE4)  '29
+  Sample (1,SunaFittingResult_med,IEEE4)  '30
+
+  Sample (1,avgA254,IEEE4) '31
+  Sample (1,avgSunaDarkAve,IEEE4)  '32
+  Sample (1,avgSunaSpecAve,IEEE4)  '33
+  Sample (1,avgTspec,IEEE4)  '34
+  Sample (1,avgTlamp,IEEE4)  '35
+  Sample (1,avgSunaHumid,IEEE4)  '36
+  Sample (1,avgSunaLampTime ,IEEE4)  '37
+
+  'OTHER
+
+  'OTHER
+  Sample (1,SunaVoltMain(10),IEEE4)
+  Sample (1,SunaVoltLamp(10),IEEE4)
+
+  Sample(1,FDOMflag,Boolean)
+  Sample(1,FDOMsoftFlag,Boolean)
+
+  Sample(1,SUNAflag,Boolean)
+  Sample(1,SUNAsoftFlag,Boolean)'v24
+  Sample(1,SUNASerialNumber,FP2)
+  Sample (1,EXODate1,IEEE4)
+  Sample (1,EXOTime1,IEEE4)
+  Sample (1,EXODepth,IEEE4)
+  Sample (1,EXOCableBatteryV,IEEE4)
+  Sample (1,EXOBatteryV,IEEE4)
+
+EndTable
+
+'Burst data table to store raw burst data
+'uncomment2nt card out statement when CF card is installed
+DataTable (BurstSamples_15Min,1,-1)
+  DataInterval (0,MainInterval,Min,10)
+  '  CardOut(0,-1)
+  '  TableFile ("USB:BurstFlashTable",8,-1,0,60,Min,0,0)
+
+  Sample (n,SunaNitrateuM(),IEEE4)
+  Sample (n,SunaFittingResult(),IEEE4)
+  'Sample (n,Eco_counts(),IEEE4)
+
+  '    Sample (n,SunaSampleTime(),IEEE4)
+  '    Sample (n,SunaNitrateuM(),IEEE4)
+  '    Sample (n,SUNA_volt(),IEEE4)
+  '    Sample (n,SunaFittingResult(),IEEE4)
+  '    Sample (n,SunaDarkAve(),IEEE4)
+  '    Sample (n,A254(),IEEE4)
+EndTable
+'------------------------UNUSED TABLES-----------------------------------------------------
+'DataTable (SUNA_string,1,-1)  'Table name, TrigVar, and size
+'  DataInterval (0,15,Min,5) 'Chnged 30s - 2s for test = top of hour, 30 = 30 min interval,
+''  TableFile ("USB:SUNAFlashTable",8,-1,0,60,Min,0,0)
+'      Sample (1,SUNAInString,String)
+'EndTable
+
+'EndTable
+''SUNA Data
+'DataTable (SUNA_raw,1,-1)  'Table name, TrigVar, and size
+'  DataInterval (0,15,Min,10) 'Chnged 30s - 2s for test = top of hour, 30 = 30 min interval,
+'    CardOut (0 ,-1)
+'      Sample (n*241,SunaVec(),IEEE4)
+'EndTable
+
+'________________________________________SUBROUTINES________________________________________________
+'OK subroutines
+Sub SUNAPolledCont
+ CD16_Output=6'turn on suna with EXO On
+  SDMCD16AC(CD16_Output,1,0)
+ 
+  Delay(0,7,Sec)'WAIT FOR SUNA prompt
+  'open serial port
+  SerialOpen (COM3,38400,0,0,20000)'open com port w/ correct port settings and enough data
+  Delay(0,1,Sec)
+  'issue $ to get to command prompt
+  SerialOut (COM3,"STRT" + CHR(13) + CHR(10),"",3,100)'issue the Continuous mode command- starts with a dark command
+  Delay(0,SUNA_warmup,Sec) 'now delay for lights/bulb to warm up
+  'initiate sample loop
+  '	For i = 1 To n 'initiate burst sample loop
+  Const x =31'take 30 samples
+  i=1
+  Public p
+  p=0'endless loop exit variable
+  Do While i<x
+    Delay(0,SUNASampleClk,mSec)'set burst sample to 1/2 Hz O/P rate
+    'endless loop exit variable statement to prevent system from hanging and being stuck if sensor fails or is removed.
+    p=p+1
+    If p>350'7 minutes at this max
+      Exit Do
+    EndIf
+    SerialInRecord (COM3,SUNAInString,&H0D,0,&H0D0A,NBytesReturned,01)
+
+    '	   If NBytesReturned>0'dont parse NANs
+
+    If NBytesReturned>1150'dont parse darks
+
+      SplitStr (SInString(),SUNAInString,",",241,0) 'use this- it put in zeros to missing fields-like when lamp fails-etc.
+
+      ' If NBytesReturned>1000'only parse good light scans,disregard others
+      SUNASerialNumber=SInString(1)'this is the serial number and instrument type as a string
+      '   SunaFileType(i) = SInString(1)'ASCII STRING 10 'this is the serial number as a float
+      SunaSampleTime(i) = SInString(2)'ASCII FLOAT 5..11
+      SunaNitrateuM(i) = SInString(3)'AF 4..9
+      SunaNitratemgL(i) = SInString(4)'AF 6..11
+      SunaFittingResult(i) = SInString(5)
+      Tlamp(i) = SInString(6)
+      Tspec(i)=SInString(7)
+      SunaLampTime(i)=SInString(8)
+      SunaHumid(i) = SInString(9)'AF 3..5 Case Is
+      SunaSpecAve(i) = SInString(13) 'AI 1..5
+      SunaDarkAve(i) = SInString(14)'ASCII INTEGER 1.3
+      SunaVoltLamp(i) = SInString(10) 'AI 1..5
+      SunaVoltMain(i) = SInString(12)'ASCII INTEGER 1.3
+
+      A254(i)  = SInString(90)'RAW A/D counts for 254 nm
+      'VoltSe (SUNA_volt(i),1,mV5000,9,1,0,250,1.0,0)
+      For j = 1 To 241
+        SunaVec(i,j)=SInString(j)'
+      Next j
+      Battery (DL_Volts_SUNA_On)
+      'EndIf
+      Delay(0,SUNASampleClk,mSec)'set burst sample to 1/2 Hz O/P rate
+      i=i+1
+    Else
+
+    EndIf
+  Loop
+  'stop sensor
+  SerialOut (COM3,"STOP" + CHR(13) + CHR(10),"",3,100)'issue the Continuous mode Stop command- starts with a dark command
+  Delay(0,1,Sec)'stop off sensor delay
+  CD16_Output=2'turn off suna with EXO On
+  SDMCD16AC(CD16_Output,1,0)
+  '   AvgSpa (SUNA_volt_ave,burst_ave,SUNA_volt(burst_ave/2))'get burst ave Nitrate
+  'calulate stats
+  AvgSpa (SunaNitrateuM_ave,burst_ave,SunaNitrateuM(burst_ave/2))'get burst ave Nitrate
+  AvgSpa (SunaFittingResult_ave,burst_ave,SunaFittingResult(burst_ave/2))'get burst Fitting Results
+  StdDevSpa (SunaNitrateuM_std,burst_ave,SunaNitrateuM(burst_ave/2))'get burst ave FDOM
+  StdDevSpa (SunaFittingResult_std,burst_ave,SunaFittingResult(burst_ave/2))'get burst ave FDOM
+  SortSpa(SunaNitrateuM_sort(),burst_ave,SunaNitrateuM(burst_ave/2))
+  SortSpa(SunaFittingResult_sort(),burst_ave,SunaFittingResult(burst_ave/2))
+
+  '   since the sort swath is 20 samples, we take the 10th and 11th and average them
+  SunaNitrateuM_med=(SunaNitrateuM_sort(burst_ave/2)+SunaNitrateuM_sort((burst_ave/2)+1))/2
+  '  SunaNitrateuM_ave=SunaNitrateuM_ave
+  '  SunaNitrateuM_med=SunaNitrateuM_med
+  SunaNitratemgL_std=SunaNitrateuM_std/71
+  SunaFittingResult_med=(SunaFittingResult_sort(burst_ave/2)+SunaFittingResult_sort((burst_ave/2)+1))/2
+  SunaNitratemgL_med=(SunaNitrateuM_med/71)
+  SunaNitratemgL_ave=(SunaNitrateuM_ave/71)
+
+  SUNA_CV=SunaNitrateuM_std/SunaNitrateuM_ave*100
+  SUNA_mean2med=SunaNitrateuM_ave/SunaNitrateuM_med
+
+  AvgSpa (avgA254,burst_ave,A254(burst_ave/2))'get burst ave Nitrate
+  AvgSpa (avgSunaDarkAve,burst_ave,SunaDarkAve(burst_ave/2))'get burst ave Nitrate
+  AvgSpa (avgSunaSpecAve,burst_ave,SunaSpecAve(burst_ave/2))'get burst ave Nitrate
+
+  MinSpa (minSunaVoltLamp,burst_ave,SunaVoltLamp(burst_ave/2))'get burst ave Nitrate
+  MinSpa (minSunaVoltMain,burst_ave,SunaVoltMain(burst_ave/2))'get burst ave Nitrate
+
+  AvgSpa (avgTspec,burst_ave,Tspec(burst_ave/2))'get burst ave Nitrate
+  AvgSpa (avgTlamp,burst_ave,Tlamp(burst_ave/2))'get burst ave Nitrate
+  AvgSpa(avgSunaHumid,burst_ave,SunaHumid(burst_ave/2))'get burst ave Nitrate
+  AvgSpa (avgSunaLampTime,burst_ave,SunaLampTime(burst_ave/2))'get burst ave Nitrate
+  '
+  '  MaxSpa (maxTspec,burst_ave,Tspec(burst_ave/2))'get burst ave Nitrate
+  '  MaxSpa (maxTlamp,burst_ave,Tlamp(burst_ave/2))'get burst ave Nitrate
+  '  MaxSpa(maxSunaHumid,burst_ave,SunaHumid(burst_ave/2))'get burst ave Nitrate
+  '  MaxSpa (maxSunaLampTime,burst_ave,SunaLampTime(burst_ave/2))'get burst ave Nitrate
+  'writeFlag=0
+
+  'shut it down
+  Delay(0,1,sec)
+
+  If  (SunaNitrateuM_ave- no3_offset)<SUNA_LOW_SOFT  OR (SunaNitrateuM_ave - no3_offset )>SUNA_HIGH_SOFT Then
+    SUNAsoftFlag = True
+  Else
+    SUNAsoftFlag = False
+  EndIf
+
+  If  (SunaNitrateuM_ave- no3_offset)<SUNA_LOW_HARD  OR (SunaNitrateuM_ave - no3_offset )>SUNA_HIGH_HARD  OR SUNA_CV<SUNA_CV_LOW OR SUNA_CV>SUNA_CV_HIGH OR SunaFittingResult_med>SUNA_FIT_HIGH OR SunaNitrateuM_med=0 Then
+    SUNAflag = True
+  Else
+    SUNAflag = False
+  EndIf
+
+  If SUNAflag = True OR SUNAsoftFlag = True Then
+
+    SunaNitratemgL_ave_Q="NAN"
+    SunaNitratemgL_med_Q="NAN"
+    SunaNitratemgL_std="NAN"
+    SunaNitrateuM_med_Q="NAN"
+    SunaNitrateuM_ave_Q="NAN"
+    SunaNitrateuM_std_Q="NAN"
+    BadSunaCnt = BadSunaCnt + 1
+  Else
+    SunaNitratemgL_ave_Q=SunaNitratemgL_ave-(no3_offset/71)
+    SunaNitratemgL_med_Q=SunaNitratemgL_med -(no3_offset/71)
+    SunaNitratemgL_std=SunaNitrateuM_std/71'fix this
+    SunaNitrateuM_med_Q=SunaNitrateuM_med - no3_offset
+    SunaNitrateuM_ave_Q=SunaNitrateuM_ave - no3_offset
+    SunaNitrateuM_std_Q=SunaNitrateuM_std
+  EndIf
+  SerialOut (COM3,"STOP" + CHR(13) + CHR(10),"",1,100)'issue the Continuous mode Stop command- starts with a dark command
+
+  SerialFlush (COM3)
+  SerialClose (COM3)
+
+  
+EndSub
+Sub SUNAsdi12
+  SDI12Recorder (junk(),LR4Port,LR4Address,"XR:1,1!",1.0,0)' power up
+  Delay(0,10,Sec)
+
+  SDI12Recorder (SDI(),SUNAsdiPort,SUNAsdiAddress,"M!",1.0,0)'take sample
+
+  SDI12Recorder (SDI2(),SUNAsdiPort,SUNAsdiAddress,"M1!",1.0,0)'get diagnostics
+  Delay(0,1,Sec)
+
+  SDI12Recorder (junk(),LR4Port,LR4Address,"XR:1,0!",1.0,0)' power down
+
+EndSub
+
+Sub SampleYSIEXO2'this subroutine needs work
+  CD16_Output=2'turn on EXO2/or make sure it is already On
+  SDMCD16AC(CD16_Output,1,0)
+  Delay(0,1,Sec)
+  SDI12Recorder (YSIEXO2(),YSIEXO2Port,YSIEXO2Address,"M!",1.0,0)'Collect data,aM2!
+  If EXODate1="NAN" Then
+
+    EXOTime1	=	"NAN"
+    EXOWtemp	=	"NAN"
+    EXOSpCond	=	"NAN"
+    EXOpH	=	"NAN"
+    EXOFDOM	=	"NAN"
+    EXOTurbidity	=	"NAN"
+    EXOCHLa	=	"NAN"
+    EXOBGA_PC	=	"NAN"
+    EXOODOsat	=	"NAN"
+    EXOODOmgL	=	"NAN"
+    EXODepth	=	"NAN"
+    EXOCableBatteryV	=	"NAN"
+    EXOBatteryV	=	"NAN"
+  EndIf
+
+  Delay(0,45,Sec)'WAIT FOR sample
+
+  'SDI12Recorder (junk(),LR4Port,LR4Address,"XR:3,0!",1.0,0)'power down
+  'leave on so te YSI int batts dont run out.'v06
+
+EndSub
+
+'----------------------------UNUSED SUBROUTINES---------------------------------------------------'
+'The following are Subroutines for making more frequent measurements for each sensor deployed at the site
+'Logic for uses subroutines is in the main program
+'Useful for technicians visiting the site, while checking and calibrating instruments
+'Add more measurement instructions as more instruments are added
+
+'Sub C7WiperTest
+'  If TestC7Wiper = true Then
+'    PortSet(WiperPort,1)
+'    Delay(0,20,mSec)
+'    PortSet(WiperPort,0)
+'    TestC7Wiper = false
+'  EndIf
+'EndSub
+
+Sub WipeSuna
+
+EndSub
+
+'_______________________________________PROGRAM_____________________________________________________
+BeginProg
+
+  'SUNA no3 Qa/Qc params
+  SUNA_CV_LOW=.1'%
+  SUNA_CV_HIGH=10'%
+  SUNA_LOW_HARD=-2
+  SUNA_LOW_SOFT=1'0
+  SUNA_HIGH_SOFT=100'3.5 mg/L
+  SUNA_HIGH_HARD=500'28 mg/L
+  SUNA_FIT_HIGH = 0.002'RMSE
+
+  TimeZone = "PST"
+  'WriteDecodes = False
+  wipe=true
+  RavenAlwaysOn = True
+  PolledMode=True
+
+  SDI12Recorder (junk(),LR4Port,LR4Address,"XR0:0,0,0,3!",1.0,0)' power up YSI on compile
+
+  SW12(1)'Turn modem on when program compiled to start (pin 8 hot on host port!)
+
+  Scan(5,min,0,0)
+
+    If LowVoltAlarm = True Then 'abort, else run sensors
+      'dispatch alerts to VIPs
+'  CD16_Output=0'turn off all sensors
+'  SDMCD16AC(CD16_Output,1,0)
+'      'turn off all sensors - YSI has internal batteries and will keep going if system power is down
+
+      ContinueScan		'reboot scan
+    EndIf
+
+    If RavenAlwaysOn = True	Then
+      SW12(1) 'turn it on
+    Else 'do this when raven always on is false
+      'turn raven on and off periodically through the day
+      If IfTime(6,24,hr) Then'turn on at 6 am for reports
+        SW12(1)
+      EndIf
+      If IfTime(7,24,hr) Then'turn off at 9  am PST
+        SW12(0)
+      EndIf
+      If IfTime(10,24,hr) Then'turn on at 6 am for reports
+        SW12(1)
+      EndIf
+      If IfTime(12,24,hr) Then'turn off at 9  am PST
+        SW12(0)
+      EndIf
+
+      If IfTime(14,24,hr) Then'turn on at 12pm
+        SW12(1)
+      EndIf
+      If IfTime(15,24,hr) Then'turn off at 2pm
+        SW12(0)
+      EndIf
+
+      If IfTime(17,24,hr) Then'turn on at 5 pm
+        SW12(1)
+      EndIf
+      If IfTime(18,24,hr) Then'turn off at 6 pm
+        SW12(0)
+      EndIf
+
+      If IfTime(23,24,hr) Then'turn on at 11 pm
+        SW12(1)
+      EndIf
+      If IfTime(0,24,hr) Then'turn off at midnight
+        SW12(0)
+      EndIf
+    EndIf
+
+    'make system diagnostic scans
+
+    PanelTemp (PTemp,250)
+    Battery (DL_Volts)
+    'Shut off Sensors if Battery Voltages Drops too low
+    If DL_Volts < LowBattLevel Then
+      'SW12(0) 'shut down modem
+' CD16_Output=0'turn on EXO2/or make sure it is already On
+'  SDMCD16AC(CD16_Output,1,0)
+    EndIf
+ CD16_Output=2'turn on EXO2/or make sure it is already On
+  SDMCD16AC(CD16_Output,1,0)
+    'Sample every N(15) minutes
+    If IfTime(0,MainInterval,min) Then 'fine tune this during burn in test
+
+      Call SampleYSIEXO2
+      'wipe SUNA
+
+      Call(SUNAPolledCont)
+
+      'Data Tables- these should be called every scan- let "TableInterval" decide
+      CallTable Data_15min
+      CallTable Data_15min_orig
+      CallTable BurstSamples_15Min
+
+      'CallTable BurstSamples_15min
+      'CallTable SUNA_Data_15min
+      'CallTable SUNA_string
+    EndIf
+  NextScan
+EndProg
+

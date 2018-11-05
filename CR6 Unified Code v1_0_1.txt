@@ -1,0 +1,689 @@
+'CR6 SeriesDatalogger
+
+'Program Author:Travis von Dessonneck
+'X2 Continous Monitroning Program
+'Built off of Previous CR1000 Code by JohnFranco Saraceno
+
+
+'--------------------------------Revision History----------------------------------------
+'v1.0 - Designed to work with V1 and V2 SUNA
+'     - Sample EXO and SUNA simultaneously to cut down on sample duration
+'     - Manual SUNA lamp timer to see true duration of Lamp
+'------------------------------Instrument Wiring----------------------------------------
+'Instrument Wiring
+'Note: See block and wiring diagrams
+
+StationName DEC 'To be changed per site
+'PreserveVariables 'This preserves the variables in the event of a power loss
+
+SequentialMode 'dont want pipeline mode!
+'_________________________________PROGRAM VARIABLES__________________________________________________
+'Datalogger variables
+Public PTemp,DL_Volts,i,j,TimeZone As String
+Units PTemp = degC
+Const LowBattLevel = 11 'Volts to turn off sensors
+Units DL_Volts = Volts
+Public ManualSample = 0
+
+'Timing constants
+Const n = 30 'number of times to sample sensor at burst frequency
+Const burst_ave = 30' # of Samples to include in burst averaging
+Public SunaSampleLength
+Const TotalTryTime = 120 'Duration (seconds) for SUNA to try and sample
+Const MainInterval = 15 'min
+Public MI As Long = MainInterval
+Const CycleInterval = 60
+Public CI As Long = CycleInterval
+Const WipeTime = 50
+
+'Power Controls/Manual Overrides  Change to 0 in the Connect screen to manually turn instruments off
+Public EXOPwrOn As Boolean = true
+Public SUNAPwrOn As Boolean = true
+Public CyclePPwrOn As Boolean = false
+Public CycleNPwrOn As Boolean = false
+'Public EXOPwrOn = true
+'Public EXOPwrOn = true
+
+'EXO
+Const EXOPort = ComC3
+Const EXOPwr = U12
+
+Public EXOIn As String * 200
+Dim EXOParse(n,14)
+
+Dim EXODate,EXODate0(n)
+Dim EXOTime,EXOTime0(n)
+Dim EXOWtemp0(n)
+Dim EXOSpCond0(n)
+Dim EXOpH0(n)
+Dim EXOFDOM0(n)
+Dim EXOTurbidity0(n)
+Dim EXOChla0(n)
+Dim EXOBGA_PC0(n)
+Dim EXOODOsat0(n)
+Dim EXOODOmgL0(n)
+Dim EXODepth,EXODepth0(n)
+Dim EXOBatteryV,EXOBatteryV0(n)
+Dim EXOCableBatteryV,EXOCableBatteryV0(n)
+
+Units EXOSpCond0 = uS/cm
+Units EXOFDOM0 = QSE
+Units EXODepth = feet
+Units EXOCableBatteryV = Volts
+Units EXOBatteryV = Volts
+Units EXOWtemp0 = Deg C
+Units EXOBGA_PC0,EXOChla0 = RFU
+'Units EXOChlaugL,EXOBGA_PCugL = ug/L
+
+'SUNA
+Const SunaPort = ComC1
+Const SunaPwr = U11
+Public ManualSunaTimer,ManualSunaTimerH
+Public ResetCount
+Public SUNASerialNumber
+
+Units ManualSunaTimerH = Hours
+
+Const SUNA_warmup = 15 'seconds of warmup before sample cycle
+Const SSL = 282 'Number of columns, this works for both V1 and V2
+
+Public SSN,SST,SNuM,SNmgL,SFR,STL,STS,SLT,SH,SSA,SDA,SVL,SVM,SA254,SSTOld
+Dim SunaVec(n,SSL)
+Dim SInString(SSL)
+
+Public SUNAInString As String * 2000
+Public NBytesReturned
+Dim SunaFittingResult(n),SunaSampleTime(n),SunaNitrateuM(n),SunaNitrateuM_sort(burst_ave)
+Public SunaNitratemgL_med,SunaNitratemgL_ave,SunaNitrateuM_ave,SunaNitrateuM_std,SunaNitrateuM_med,SunaNitratemgL_std
+Public SunaFittingResult_ave,SunaFittingResult_std,SunaFittingResult_med
+
+Public avgA254,avgSunaDarkAve,avgSunaSpecAve,avgTspec,avgTlamp,avgSunaHumid,avgSunaLampTime
+Dim SunaVoltMain(n),SunaVoltLamp(n)
+Public minSunaVoltMain(2),minSunaVoltLamp(2)
+Public avgSunaVoltMain,avgSunaVoltLamp
+Public SUNA_mean2med,SUNA_CV
+
+Dim SunaFittingResult_sort(burst_ave),SunaLampTime(n),SunaNitratemgL(n)
+Dim SunaHumid(n),SunaDarkAve(n),SunaSpecAve(n),A254(n),Tlamp(n),Tspec(n)
+
+'Cycle - PO4
+Const CyclePPort = COMU1
+Const CyclePPwr = U8
+
+Dim PInString(18)
+Public CycleInStringPO4 As String * 100
+Public CyclePTimer
+
+Public CyclePRun,CAPO4 ,VAPO4,VASP,PDiag1,PDiag2
+Public PState,PFlush1,PAmbMin,PCalMin,PFlush2,PRemaining
+Public Pmonth,Pday,Pyear,Phour,Pmin
+
+'Cycle - NH4
+Const CycleNPort = COMU3
+Const CycleNPwr = U9
+
+Dim NInString(18)
+Public CycleInStringNH4 As String * 100
+Public CycleNTimer
+
+Public CycleNRun,CANH4 ,VANH4,VASN,NDiag1,NDiag2
+Public NState,NFlush1,NAmbMin,NCalMin,NFlush2,NRemaining
+Public Nmonth,Nday,Nyear,Nhour,Nmin
+
+'_________________________________________DATA TABLES_______________________________________________
+DataTable (Data_15min_Orig,1,-1) 'raw data
+  DataInterval (0,MainInterval,min,10)
+  Minimum (1,DL_Volts,FP2,0,false)
+  Maximum (1,PTemp,FP2,0,false)
+
+  'YSI
+  Median (1,EXOWtemp0(),30,IEEE4,False)
+  Median (1,EXOSpCond0(),30,IEEE4,False)
+  Median (1,EXOpH0(),30,IEEE4,False)
+  Median (1,EXOFDOM0(),30,IEEE4,False)
+  Median (1,EXOTurbidity0(),30,IEEE4,False)
+  Median (1,EXOChla0(),30,IEEE4,False)
+  Median (1,EXOBGA_PC0(),30,IEEE4,False)
+  Median (1,EXOODOmgL0(),30,IEEE4,False)
+  Median (1,EXOODOsat0(),30,IEEE4,False)
+
+  'SUNA
+  Sample (1,SunaNitrateuM_ave,IEEE4)
+  Sample (1,SunaNitrateuM_std,IEEE4)
+  Sample (1,SunaNitrateuM_med,FP2)
+  Sample (1,SunaNitratemgL_ave,IEEE4)
+  Sample (1,SunaNitratemgL_med,IEEE4)
+  Sample (1,SunaFittingResult_ave,IEEE4)
+  Sample (1,SunaFittingResult_std,IEEE4)
+  Sample (1,SunaFittingResult_med,IEEE4)
+  Sample (1,avgA254,IEEE4)
+  Sample (1,avgSunaDarkAve,IEEE4)
+  Sample (1,avgSunaSpecAve,IEEE4)
+  Sample (1,avgTspec,FP2)
+  Sample (1,avgTlamp,FP2)
+  Sample (1,avgSunaHumid,FP2)
+  Sample (1,avgSunaLampTime,IEEE4)
+  Sample (1,ManualSunaTimerH,IEEE4) 'Put the seconds into hours
+
+  'OTHER
+  Sample (1,avgSunaVoltMain,IEEE4)
+  Sample (1,avgSunaVoltLamp,IEEE4)
+  Sample (1,EXODate,IEEE4)
+  Sample (1,EXOTime,IEEE4)
+  Sample (1,EXODepth,IEEE4)
+  Sample (1,EXOCableBatteryV,IEEE4)
+  Sample (1,EXOBatteryV,IEEE4)
+
+  '  CardOut(0,-1)
+  TableFile ("CRD:Data_15min_Orig",64,-1,0,24,Hr,0,0)
+EndTable
+
+DataTable (EXOBurst,1,-1) 'All EXO burst data
+  DataInterval (0,15,Min,10)
+  Sample (n,EXOWtemp0,IEEE4)
+  Sample (n,EXOSpCond0,IEEE4)
+  Sample (n,EXOpH0,IEEE4)
+  Sample (n,EXOFDOM0,IEEE4)
+  Sample (n,EXOTurbidity0,IEEE4)
+  Sample (n,EXOChla0,IEEE4)
+'  Sample (n,EXOChlaugL0,IEEE4)
+  Sample (n,EXOBGA_PC0,IEEE4)
+'  Sample (n,EXOBGA_PCugL0,IEEE4)
+  Sample (n,EXOODOsat0,IEEE4)
+  Sample (n,EXOODOmgL0,IEEE4)
+  Sample (n,EXODate0,IEEE4)
+  Sample (n,EXOTime0,IEEE4)
+  Sample (n,EXODepth0,IEEE4)
+  Sample (n,EXOCableBatteryV0,IEEE4)
+  Sample (n,EXOBatteryV0,IEEE4)
+  '  CardOut(0,-1)
+  TableFile ("CRD:EXOBurst",64,-1,0,24,Hr,0,0)
+EndTable
+
+DataTable (SUNA_raw,1,-1) 'All SUNA burst data
+  DataInterval (0,MainInterval,Min,10)
+  Sample (n*SSL,SunaVec(),IEEE4)
+  '  CardOut(0,-1)
+  TableFile ("CRD:SUNA_raw",64,-1,0,24,Hr,0,0)
+EndTable
+
+DataTable(NWIS_Data,1,-1) 'Data to be pulled into NWIS, ONLY
+  DataInterval (0,15,Min,10)
+  Minimum (1,DL_Volts,FP2,0,false)
+  Median (1,EXOWtemp0(),30,IEEE4,False)
+  Median (1,EXOSpCond0(),30,IEEE4,False)
+  Median (1,EXOpH0(),30,IEEE4,False)
+  Median (1,EXOFDOM0(),30,IEEE4,False)
+  Median (1,EXOTurbidity0(),30,IEEE4,False)
+  Median (1,EXOChla0(),30,IEEE4,False)
+  Median (1,EXOBGA_PC0(),30,IEEE4,False)
+  Median (1,EXOODOmgL0(),30,IEEE4,False)
+  Median (1,EXOODOsat0(),30,IEEE4,False)
+
+  Sample (1,SunaNitratemgL_med,IEEE4)
+  '  CardOut(0,-1)
+  TableFile ("CRD:NWIS_Data",64,-1,0,24,Hr,0,0)
+EndTable
+
+DataTable (CycPDataTableAll,1,-1)
+  DataInterval (55,CycleInterval,Min,10)
+  Sample (1,Phour,FP2)
+  Sample (1,Pmin,FP2)
+  Sample (1,CyclePRun,FP2)
+  Sample (1,CAPO4,IEEE4)
+  Sample (1,VAPO4,IEEE4)
+  Sample (1,VASP,FP2)
+  Sample (1,PState,FP2)
+  Sample (1,PFlush1,FP2)
+  Sample (1,PAmbMin,FP2)
+  Sample (1,PCalMin,FP2)
+  Sample (1,PFlush2,FP2)
+  Sample (1,PRemaining,FP2)
+  Sample (1,PDiag1,FP2)
+  Sample (1,PDiag2,FP2)
+  Sample (1,CycleInStringPO4,String)
+  '  CardOut(0,-1)
+  TableFile ("CRD:CycPDataTableAll",64,-1,0,24,Hr,0,0)
+EndTable
+
+DataTable (CycNDataTableAll,1,-1)
+  DataInterval (55,CycleInterval,Min,10)
+  Sample (1,Nhour,FP2)
+  Sample (1,Pmin,FP2)
+  Sample (1,CycleNRun,FP2)
+  Sample (1,CANH4,IEEE4)
+  Sample (1,VANH4,IEEE4)
+  Sample (1,VASN,FP2)
+  Sample (1,NState,FP2)
+  Sample (1,NFlush1,FP2)
+  Sample (1,NAmbMin,FP2)
+  Sample (1,NCalMin,FP2)
+  Sample (1,NFlush2,FP2)
+  Sample (1,NRemaining,FP2)
+  Sample (1,NDiag1,FP2)
+  Sample (1,NDiag2,FP2)
+  Sample (1,CycleInStringNH4,String)
+  '  CardOut(0,-1)
+  TableFile ("CRD:CycNDataTableAll",64,-1,0,24,Hr,0,0)
+EndTable
+
+DataTable (ManualSample,1,-1) 'raw data
+  DataInterval (0,5,sec,10)
+  Minimum (1,DL_Volts,FP2,0,false)
+  Maximum (1,PTemp,FP2,0,false)
+
+  'YSI
+  Median (1,EXOWtemp0(),30,IEEE4,False)
+  Median (1,EXOSpCond0(),30,IEEE4,False)
+  Median (1,EXOpH0(),30,IEEE4,False)
+  Median (1,EXOFDOM0(),30,IEEE4,False)
+  Median (1,EXOTurbidity0(),30,IEEE4,False)
+  Median (1,EXOChla0(),30,IEEE4,False)
+  Median (1,EXOBGA_PC0(),30,IEEE4,False)
+  Median (1,EXOODOmgL0(),30,IEEE4,False)
+  Median (1,EXOODOsat0(),30,IEEE4,False)
+
+  'SUNA
+  Sample (1,SunaNitrateuM_ave,IEEE4)
+  Sample (1,SunaNitrateuM_std,IEEE4)
+  Sample (1,SunaNitrateuM_med,FP2)
+  Sample (1,SunaNitratemgL_ave,IEEE4)
+  Sample (1,SunaNitratemgL_med,IEEE4)
+  Sample (1,SunaFittingResult_ave,IEEE4)
+  Sample (1,SunaFittingResult_std,IEEE4)
+  Sample (1,SunaFittingResult_med,IEEE4)
+  Sample (1,avgA254,IEEE4)
+  Sample (1,avgSunaDarkAve,IEEE4)
+  Sample (1,avgSunaSpecAve,IEEE4)
+  Sample (1,avgTspec,FP2)
+  Sample (1,avgTlamp,FP2)
+  Sample (1,avgSunaHumid,FP2)
+  Sample (1,avgSunaLampTime,IEEE4)
+
+  'OTHER
+  Sample (1,SunaVoltMain(10),IEEE4)
+  Sample (1,SunaVoltLamp(10),IEEE4)
+  Sample (1,EXODate,IEEE4)
+  Sample (1,EXOTime,IEEE4)
+  Sample (1,EXODepth,IEEE4)
+  Sample (1,EXOCableBatteryV,IEEE4)
+  Sample (1,EXOBatteryV,IEEE4)
+EndTable
+
+'________________________________________SUBROUTINES________________________________________________
+
+Sub SUNA_EXO_Sample
+  SerialOpen (SunaPort,115200,0,0,40000)'open com port w/ correct port settings and enough data
+  SerialOut (EXOPort,"run" + CHR(13),"run" + CHR(13),5,10) 'Starts the EXO sampling at 1Hz
+  Delay (0,2,Sec)
+
+  'initiate sample loop
+  i = 0
+  SunaSampleLength = 0
+  EXOParse(1) = 0
+  Timer (1,Sec,2) 'Reset and Start Timer
+  SSTOld = 0 'initializes the variable to make sure the first sample is recorded
+  Do While i < n+1 AND SunaSampleLength < TotalTryTime+1 'n samples or TotalTryTime seconds of trying
+
+    SerialInRecord (SunaPort,SUNAInString,76,0,&H0D0A,NBytesReturned,01) 'Looks for an "L" in the incoming string, won't process Dark frames
+    SplitStr (SInString(),SUNAInString,",",SSL,0) 'use this- it put in zeros to missing fields-like when lamp fails-etc.
+
+    If SInString(1) <> "NAN"
+      If SInString(1) < 255 Then 'SUNA SN 255 works for our inventory.  V1s and V2s were produced in parallel for a time, per Satlantic
+        SSN = 1 'Serial Number
+        SST = 2 'Sample Time
+        SNuM = 3 'NO3 uM
+        SNmgL = 4 'NO3 mg/L
+        SFR = 5
+        STL = 6
+        STS = 7
+        SLT = 8
+        SH = 9
+        SSA = 13
+        SDA = 14
+        SVL = 10
+        SVM = 12
+        SA254 = 90
+      Else  'SUNAV2
+        SSN = 1
+        SST = 3
+        SNuM = 4
+        SNmgL = 5
+        SFR = 281
+        STL = 270
+        STS = 269
+        SLT = 271
+        SH = 272
+        SSA = 9
+        SDA = 10
+        SVL = 274
+        SVM = 273
+        SA254 = 6
+      EndIf
+
+      If SUNASerialNumber <> SInString(SSN)
+        ManualSunaTimer = 0
+        ResetCount = 1
+      Else
+        ResetCount = 0
+      EndIf
+
+      If SInString(SST) > SSTOld 'Checks timestamp against the previous timestamp, if new one is bigger it saves all the data and asks for EXO data
+        SUNASerialNumber = SInString(SSN)'this is the serial number
+        SunaSampleTime(i) = SInString(SST)'ASCII FLOAT 5..11
+        SunaNitrateuM(i) = SInString(SNuM)'AF 4..9
+        SunaNitratemgL(i) = SInString(SNmgL)'AF 6..11
+        SunaFittingResult(i) = SInString(SFR)
+        Tlamp(i) = SInString(STL)
+        Tspec(i) = SInString(STS)
+        SunaLampTime(i) = SInString(SLT)
+        SunaHumid(i) = SInString(SH)'AF 3..5 Case Is
+        SunaSpecAve(i) = SInString(SSA) 'AI 1..5
+        SunaDarkAve(i) = SInString(SDA)'ASCII INTEGER 1.3
+        SunaVoltLamp(i) = SInString(SVL) 'AI 1..5
+        SunaVoltMain(i) = SInString(SVM)'ASCII INTEGER 1.3
+        A254(i) = SInString(SA254)'RAW A/D counts for 254 nm
+
+        For j = 1 To SSL
+          SunaVec(i,j) = SInString(j) 'assigning the parsed values to a matrix
+        Next j
+
+        SSTOld = SInString(SST)
+
+        'EXO Sample
+        SerialIn (EXOIn,EXOPort,100,"#",100)
+        SplitStr (EXOParse(i,1),EXOIn,CHR(32),16,4)
+        i = i+1 'sample counter
+      EndIf
+
+    EndIf
+    SunaSampleLength = Timer (1,Sec,4) 'checks the total duration of trying to get data from the SUNA
+
+  Loop
+  Delay(1,1,Sec)
+  PortSet(SunaPwr,0) 'Turn off SUNA
+  If NBytesReturned <> 0 'If data came in from the SUNA
+    ManualSunaTimer = ManualSunaTimer + SunaSampleLength + SUNA_warmup + 3 'Add Current sample time, plus 17 seconds (warmup) to the total SUNA time
+  EndIf
+  SerialFlush(SunaPort)
+  SerialClose(SunaPort)
+
+  If EXOParse(1) = 0 'If the SUNA isn't working EXO data is never read
+    Do While i < n+1
+        SerialIn (EXOIn,EXOPort,100,"#",100)
+        SplitStr (EXOParse(i,1),EXOIn,CHR(32),16,4)
+        i = i+1 'sample counter
+    Loop
+  EndIf
+  
+  ManualSunaTimerH = ManualSunaTimer/3600
+  SerialOut(EXOPort,"0" + CHR(13),0,3,100) 'Stop the EXO
+  SerialFlush(EXOPort)
+  SerialClose(EXOPort)
+EndSub
+
+Sub SUNAProcess
+  'calulate stats
+  AvgSpa (SunaNitrateuM_ave,burst_ave,SunaNitrateuM)'get burst ave Nitrate
+  AvgSpa (SunaFittingResult_ave,burst_ave,SunaFittingResult)'get burst Fitting Results
+  StdDevSpa (SunaNitrateuM_std,burst_ave,SunaNitrateuM)'get burst standard deviation of Nitrate
+  StdDevSpa (SunaFittingResult_std,burst_ave,SunaFittingResult)'get burst standard deviation of Fitting Results
+  SortSpa (SunaNitrateuM_sort(),burst_ave,SunaNitrateuM) 'Sort Nitrate
+  SortSpa (SunaFittingResult_sort(),burst_ave,SunaFittingResult) 'Sort Fitting Results
+
+  '   since the sort swath is n samples, we take the 10th and 11th and average them
+  SunaNitrateuM_med = (SunaNitrateuM_sort(burst_ave/2)+SunaNitrateuM_sort((burst_ave/2)+1))/2
+  SunaNitratemgL_std = SunaNitrateuM_std/71 'converts uM to mg/L
+  SunaFittingResult_med = (SunaFittingResult_sort(burst_ave/2)+SunaFittingResult_sort((burst_ave/2)+1))/2
+  SunaNitratemgL_med = (SunaNitrateuM_med/71)
+  SunaNitratemgL_ave = (SunaNitrateuM_ave/71)
+
+  SUNA_CV = SunaNitrateuM_std/SunaNitrateuM_ave*100
+  SUNA_mean2med = SunaNitrateuM_ave/SunaNitrateuM_med
+
+  AvgSpa (avgA254,burst_ave,A254)'get burst ave A254
+  AvgSpa (avgSunaDarkAve,burst_ave,SunaDarkAve)'get burst ave Dark
+  AvgSpa (avgSunaSpecAve,burst_ave,SunaSpecAve)'get burst ave Spec
+
+  MinSpa (minSunaVoltLamp,burst_ave,SunaVoltLamp)'get min Lamp Voltage
+  MinSpa (minSunaVoltMain,burst_ave,SunaVoltMain)'get min Main Voltage
+  AvgSpa (avgSunaVoltMain,burst_ave,SunaVoltMain)
+  AvgSpa (avgSunaVoltLamp,burst_ave,SunaVoltLamp)
+
+  AvgSpa (avgTspec,burst_ave,Tspec)'get burst ave Spectra Temperature
+  AvgSpa (avgTlamp,burst_ave,Tlamp)'get burst ave Lamp Temperature
+  AvgSpa (avgSunaHumid,burst_ave,SunaHumid)'get burst ave Internal Humidity
+  AvgSpa (avgSunaLampTime,burst_ave,SunaLampTime)'get burst ave Lamp Time
+
+  SunaNitratemgL_std = SunaNitrateuM_std/71
+EndSub
+
+Sub EXOProcess
+  EXODate0() = EXOParse(-1,1)()
+  EXOTime0() = EXOParse(-1,2)()
+  EXOWtemp0() = EXOParse(-1,3)()
+  EXOSpCond0() = EXOParse(-1,4)()
+  EXOpH0() = EXOParse(-1,5)()
+  EXOFDOM0() = EXOParse(-1,6)()
+  EXOTurbidity0() = EXOParse(-1,7)()
+  EXOChla0() = EXOParse(-1,8)()
+'  EXOChlaugL0() = EXOParse(-1,7)()
+  EXOBGA_PC0() = EXOParse(-1,9)()
+'  EXOBGA_PCugL0() = EXOParse(-1,9)()
+  EXOODOsat0() = EXOParse(-1,10)()
+  EXOODOmgL0() = EXOParse(-1,11)()
+  EXODepth0() = EXOParse(-1,12)()
+  EXOBatteryV0() = EXOParse(-1,13)()
+  EXOCableBatteryV0() = EXOParse(-1,14)()
+EndSub
+
+Sub GetLastDataPO4
+  SerialOpen (CyclePPort,19200,0,0,1000)
+  Delay(0,100,mSec)'Wait
+  For i = 1 To 3 ' Wake Cycle up
+    SerialOutBlock (CyclePPort,CHR(32) + CHR(13),2)
+    SerialFlush(CyclePPort)
+    Delay(0,1000,mSec)'Wait
+  Next i
+
+  Pmonth = "NAN"'ASCII STRING 10 'this is the serial number as a float
+  Pday = "NAN"'ASCII FLOAT 5..11
+  Pyear = "NAN"'ASCII FLOAT 5..11
+  Phour = "NAN"'AF 4..9
+  Pmin = "NAN"'AF 6..11
+  CyclePRun = "NAN"'ASCII FLOAT 5..11
+  CAPO4 = "NAN"'AF 4..9
+  VAPO4 = "NAN"'AF 4..9
+  VASP = "NAN"
+  PState = "NAN"
+  PFlush1 = "NAN"
+  PAmbMin = "NAN"
+  PFlush2 = "NAN"
+  PCalMin = "NAN"
+  PRemaining = "NAN"
+  PDiag1 = "NAN"'AF 6..11
+  PDiag2 = "NAN"'AF 6..11
+
+  SerialOutBlock (CyclePPort,"$GLSO" + CHR(13),6)'Issue data-return command
+
+  Timer (2,Sec,2)
+  While SerialInChk(CyclePPort) < 40 AND CyclePTimer < 60'wait until there are a 40 characters available in the buffer for a maximum of 60 seconds
+    CyclePTimer = Timer (2,Sec,4)
+  Wend
+  SerialIn (CycleInStringPO4,CyclePPort,10,&H0D,100)'$Data
+
+  If Len(CycleInStringPO4) > 40 'if there is data
+    SplitStr (PInString(),CycleInStringPO4,CHR(09),18,0)'parse data from Cycle as tab sv, parse numbers and ignore text
+    '18 pieces of data
+    Pmonth = PInString(1)'ASCII STRING 10 'this is the serial number as a float
+    Pday = PInString(2)'ASCII FLOAT 5..11
+    Pyear = PInString(3)'ASCII FLOAT 5..11
+    Phour = PInString(4)'AF 4..9
+    Pmin = PInString(5)'AF 6..11
+
+    CyclePRun = PInString(7)'ASCII FLOAT 5..11
+    CAPO4 = PInString(8)'AF 4..9
+    VAPO4 = PInString(9)'AF 4..9
+    VASP = PInString(10)
+    PState = PInString(11)
+    PFlush1 = PInString(12)
+    PAmbMin = PInString(13)
+    PFlush2 = PInString(14)
+    PCalMin = PInString(15)
+    PRemaining = PInString(16)
+    PDiag1 = PInString(17)'AF 6..11
+    PDiag2 = PInString(18)'AF 6..11
+  EndIf
+
+  SerialFlush(CyclePPort)
+  SerialOutBlock (CyclePPort,"$SLP" + CHR(13),5)'Put Cycle to sleep
+  SerialFlush(CyclePPort)
+EndSub
+
+Sub GetLastDataNH4
+  SerialOpen (CyclePPort,19200,0,0,1000)
+  Delay(0,100,mSec)'Wait
+  For i = 1 To 3 ' Wake Cycle up
+    SerialOutBlock (CycleNPort,CHR(32) + CHR(13),2)
+    SerialFlush(CycleNPort)
+    Delay(0,1000,mSec)'Wait
+  Next i
+
+  Nmonth = "NAN"'ASCII STRING 10 'this is the serial number as a float
+  Nday = "NAN"'ASCII FLOAT 5..11
+  Nyear = "NAN"'ASCII FLOAT 5..11
+  Nhour = "NAN"'AF 4..9
+  Nmin = "NAN"'AF 6..11
+  CycleNRun = "NAN"'ASCII FLOAT 5..11
+  CANH4 = "NAN"'AF 4..9
+  VANH4 = "NAN"'AF 4..9
+  VASN = "NAN"
+  NState = "NAN"
+  NFlush1 = "NAN"
+  NAmbMin = "NAN"
+  NFlush2 = "NAN"
+  NCalMin = "NAN"
+  NRemaining = "NAN"
+  NDiag1 = "NAN"'AF 6..11
+  NDiag2 = "NAN"'AF 6..11
+
+  SerialOutBlock (CycleNPort,"$GLSO" + CHR(13),6)'Issue data-return command
+
+  Timer (2,Sec,2)
+  While SerialInChk(CycleNPort) < 40 AND CycleNTimer < 60'wait until there are a 40 characters available in the buffer for a maximum of 60 seconds
+    CycleNTimer = Timer (2,Sec,4)
+  Wend
+  SerialIn (CycleInStringNH4,CycleNPort,10,&H0D,100)'$Data
+
+  If Len(CycleInStringNH4) > 40 'if there is data
+    SplitStr (NInString(),CycleInStringNH4,CHR(09),18,0)'parse data from Cycle as tab sv, parse numbers and ignore text
+    '18 pieces of data
+    Nmonth = NInString(1)'ASCII STRING 10 'this is the serial number as a float
+    Nday = NInString(2)'ASCII FLOAT 5..11
+    Nyear = NInString(3)'ASCII FLOAT 5..11
+    Nhour = NInString(4)'AF 4..9
+    Nmin = NInString(5)'AF 6..11
+
+    CycleNRun = NInString(7)'ASCII FLOAT 5..11
+    CANH4 = NInString(8)'AF 4..9
+    VANH4 = NInString(9)'AF 4..9
+    VASN = NInString(10)
+    NState = NInString(11)
+    NFlush1 = NInString(12)
+    NAmbMin = NInString(13)
+    NFlush2 = NInString(14)
+    NCalMin = NInString(15)
+    NRemaining = NInString(16)
+    NDiag1 = NInString(17)'AF 6..11
+    NDiag2 = NInString(18)'AF 6..11
+  EndIf
+
+  SerialFlush(CycleNPort)
+  SerialOutBlock (CycleNPort,"$SLP" + CHR(13),5)'Put Cycle to sleep
+  SerialFlush(CycleNPort)
+EndSub
+
+'_______________________________________PROGRAM_____________________________________________________
+BeginProg
+  TimeZone = "PST"
+  PortSet(CyclePPwr,1) 'Turn on CycleP always powered, unless manually turned off
+  PortSet(CycleNPwr,1) 'Turn on CycleN always powered, unless manually turned off
+  PortSet(EXOPwr,1) 'EXO is always powered, unless manually turned off
+
+  Scan(5,Sec,0,0)
+    PanelTemp (PTemp,15000)
+    Battery (DL_Volts)
+    If EXOPwrOn = true Then
+      PortSet(EXOPwr,1) 'Turn on EXO
+    Else
+      PortSet(EXOPwr,0) 'Turn off EXO
+    EndIf
+
+    If CyclePPwrOn = true Then
+      PortSet(CyclePPwr,1) 'Turn on CycleP
+    Else
+      PortSet(CyclePPwr,0) 'Turn off CycleP
+    EndIf
+
+    If CycleNPwrOn = true Then
+      PortSet(CycleNPwr,1) 'Turn on CycleN
+    Else
+      PortSet(CycleNPwr,0) 'Turn off CycleN
+    EndIf
+
+    If IfTime((MI*60) - WipeTime,MI*60,Sec) '50 seconds before sample
+      SerialOpen(EXOPort,9600,0,0,2000)
+      Delay(0,100,mSec)
+      SerialOut (EXOPort,"twipeb" + CHR(13),"45",3,4)
+    EndIf
+
+    If IfTime(MI*60 - SUNA_warmup,MI*60,sec) 'warmup time before sample
+      If SUNAPwrOn = true Then 'Prevents the SUNA from being turned on if this is manually over-ridden
+        PortSet(SunaPwr,1) 'Turn on Sensor
+      EndIf
+    EndIf
+
+    If ManualSample = 1 Then'Takes a sample, but does not save the data anywhere
+      SerialOpen(EXOPort,9600,0,0,2000)
+      Delay(0,100,mSec)
+      SerialOut (EXOPort,"twipeb" + CHR(13),"45",3,4)
+      Delay(0,WipeTime - SUNA_warmup,Sec)
+      PortSet(SunaPwr,1) 'Turn on Sensor
+      Delay(0,SUNA_warmup,Sec)
+
+      Call SUNA_EXO_Sample
+      Call EXOProcess
+      Call SUNAProcess
+
+      ManualSample = 0
+
+      CallTable ManualSample
+    EndIf
+
+    'Sample every MainInterval minutes
+    If IfTime(0,MI,min)
+      Call SUNA_EXO_Sample
+      Call EXOProcess
+      Call SUNAProcess
+
+      CallTable Data_15min_orig
+      CallTable EXOBurst
+      CallTable NWIS_Data
+      CallTable SUNA_raw
+    EndIf
+
+    If IfTime(55,CI,min) 'Cycles data collected at a different timescale than the main data.  Look for data 5 minutes before instrument samples
+      If CyclePPwrOn = true
+        Call GetLastDataPO4
+        CallTable CycPDataTableAll
+      EndIf
+
+      If CycleNPwrOn = true
+        Call GetLastDataNH4
+        CallTable CycNDataTableAll
+      EndIf
+    EndIf
+  NextScan
+EndProg
+
+
